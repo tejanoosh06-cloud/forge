@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import ReactMarkdown from "react-markdown";
+import remarkGfm from "remark-gfm";
 
 const SUGGESTED_QUESTIONS = [
   { text: "Pvt Ltd vs LLP — which fits my startup?" },
@@ -9,10 +11,24 @@ const SUGGESTED_QUESTIONS = [
   { text: "Do I need GST registration as a freelancer?" },
 ];
 
+const LOADING_MESSAGES = [
+  "Thinking like a senior founder...",
+  "Consulting Indian VC playbooks...",
+  "Checking DPIIT guidelines...",
+  "Pulling up GST rules...",
+  "Analyzing the Indian market...",
+  "Connecting the dots...",
+  "Drafting a sharp answer...",
+  "Looking up MCA filings...",
+  "Reviewing FEMA compliance...",
+  "Crunching the numbers...",
+];
+
 export default function Home() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [loadingMessage, setLoadingMessage] = useState(LOADING_MESSAGES[0]);
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [chats, setChats] = useState([]);
   const [activeChatId, setActiveChatId] = useState(null);
@@ -24,6 +40,18 @@ export default function Home() {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages, loading]);
+
+  // Rotate loading messages every 1.8s while loading
+  useEffect(() => {
+    if (!loading) return;
+    let idx = 0;
+    setLoadingMessage(LOADING_MESSAGES[0]);
+    const interval = setInterval(() => {
+      idx = (idx + 1) % LOADING_MESSAGES.length;
+      setLoadingMessage(LOADING_MESSAGES[idx]);
+    }, 1800);
+    return () => clearInterval(interval);
+  }, [loading]);
 
   async function sendMessage(text) {
     const messageText = (text || input).trim();
@@ -212,23 +240,33 @@ export default function Home() {
                     key={i}
                     className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"} animate-in fade-in slide-in-from-bottom-2 duration-300`}
                   >
-                    <div
-                      className={`max-w-[85%] whitespace-pre-wrap leading-relaxed text-[15px] ${
-                        msg.role === "user"
-                          ? "bg-white/5 backdrop-blur-xl border border-white/10 text-neutral-100 px-4 py-3 rounded-2xl rounded-br-md"
-                          : "text-neutral-200"
-                      }`}
-                    >
-                      {msg.content}
-                    </div>
+                    {msg.role === "user" ? (
+                      <div className="max-w-[85%] whitespace-pre-wrap leading-relaxed text-[15px] bg-white/5 backdrop-blur-xl border border-white/10 text-neutral-100 px-4 py-3 rounded-2xl rounded-br-md">
+                        {msg.content}
+                      </div>
+                    ) : (
+                      <div className="max-w-[85%] text-neutral-200 text-[15px] markdown-body">
+                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                          {msg.content}
+                        </ReactMarkdown>
+                      </div>
+                    )}
                   </div>
                 ))}
                 {loading && (
                   <div className="flex justify-start animate-in fade-in duration-300">
-                    <div className="px-1 py-3 flex items-center gap-1.5 h-10">
-                      <div className="w-1.5 h-1.5 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 animate-bounce" style={{ animationDelay: "0ms" }}></div>
-                      <div className="w-1.5 h-1.5 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 animate-bounce" style={{ animationDelay: "150ms" }}></div>
-                      <div className="w-1.5 h-1.5 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 animate-bounce" style={{ animationDelay: "300ms" }}></div>
+                    <div className="flex items-center gap-3 px-1 py-3">
+                      <div className="flex items-center gap-1.5">
+                        <div className="w-1.5 h-1.5 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 animate-bounce" style={{ animationDelay: "0ms" }}></div>
+                        <div className="w-1.5 h-1.5 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 animate-bounce" style={{ animationDelay: "150ms" }}></div>
+                        <div className="w-1.5 h-1.5 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 animate-bounce" style={{ animationDelay: "300ms" }}></div>
+                      </div>
+                      <span
+                        key={loadingMessage}
+                        className="text-sm bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent animate-in fade-in duration-500"
+                      >
+                        {loadingMessage}
+                      </span>
                     </div>
                   </div>
                 )}
@@ -237,13 +275,11 @@ export default function Home() {
           </div>
         </div>
 
-        {/* INPUT — refined frosted glass with subtle ambient glow */}
+        {/* INPUT */}
         <div className="relative px-4 pb-6 pt-4">
           <div className="relative max-w-3xl mx-auto">
-            {/* Subtle gradient glow halo behind the chat box */}
             <div className="absolute -inset-4 bg-gradient-to-r from-blue-600/10 via-purple-600/10 to-blue-600/10 blur-2xl opacity-60 rounded-full pointer-events-none"></div>
 
-            {/* The actual chat box */}
             <div className="relative bg-neutral-950/80 backdrop-blur-2xl rounded-2xl border border-white/10 hover:border-white/20 focus-within:border-white/20 transition-colors shadow-2xl shadow-black/50">
               <div className="flex gap-2 items-end">
                 <textarea
@@ -286,6 +322,77 @@ export default function Home() {
         ::-webkit-scrollbar-track { background: transparent; }
         ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.05); border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.1); }
+
+        /* Markdown body styles */
+        .markdown-body { line-height: 1.7; }
+        .markdown-body h1 {
+          font-size: 1.5rem; font-weight: 700; margin: 1.5rem 0 0.75rem;
+          color: rgb(245, 245, 245); letter-spacing: -0.02em;
+        }
+        .markdown-body h2 {
+          font-size: 1.25rem; font-weight: 700; margin: 1.5rem 0 0.5rem;
+          color: rgb(245, 245, 245); letter-spacing: -0.01em;
+        }
+        .markdown-body h3 {
+          font-size: 1.05rem; font-weight: 600; margin: 1.25rem 0 0.5rem;
+          color: rgb(229, 229, 229);
+        }
+        .markdown-body h4 {
+          font-size: 0.95rem; font-weight: 600; margin: 1rem 0 0.5rem;
+          color: rgb(229, 229, 229);
+        }
+        .markdown-body p { margin: 0.5rem 0; }
+        .markdown-body strong {
+          color: rgb(245, 245, 245); font-weight: 600;
+        }
+        .markdown-body em { font-style: italic; color: rgb(212, 212, 212); }
+        .markdown-body ul {
+          list-style: disc; padding-left: 1.5rem; margin: 0.5rem 0;
+        }
+        .markdown-body ol {
+          list-style: decimal; padding-left: 1.5rem; margin: 0.5rem 0;
+        }
+        .markdown-body li { margin: 0.35rem 0; padding-left: 0.25rem; }
+        .markdown-body li::marker { color: rgb(168, 85, 247); }
+        .markdown-body code {
+          background: rgba(255, 255, 255, 0.08);
+          padding: 0.15rem 0.4rem; border-radius: 4px;
+          font-family: ui-monospace, monospace; font-size: 0.875em;
+          color: rgb(196, 181, 253);
+        }
+        .markdown-body pre {
+          background: rgba(255, 255, 255, 0.03);
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          padding: 1rem; border-radius: 12px; overflow-x: auto;
+          margin: 0.75rem 0;
+        }
+        .markdown-body pre code {
+          background: transparent; padding: 0; color: rgb(229, 229, 229);
+        }
+        .markdown-body blockquote {
+          border-left: 3px solid rgb(168, 85, 247);
+          padding-left: 1rem; margin: 0.75rem 0;
+          color: rgb(212, 212, 212); font-style: italic;
+        }
+        .markdown-body a {
+          color: rgb(96, 165, 250); text-decoration: underline;
+          text-underline-offset: 2px;
+        }
+        .markdown-body a:hover { color: rgb(147, 197, 253); }
+        .markdown-body hr {
+          border: none; border-top: 1px solid rgba(255, 255, 255, 0.08);
+          margin: 1.5rem 0;
+        }
+        .markdown-body table {
+          border-collapse: collapse; margin: 0.75rem 0; width: 100%;
+        }
+        .markdown-body th, .markdown-body td {
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          padding: 0.5rem 0.75rem; text-align: left;
+        }
+        .markdown-body th {
+          background: rgba(255, 255, 255, 0.03); font-weight: 600;
+        }
       `}</style>
     </div>
   );
