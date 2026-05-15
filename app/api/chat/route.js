@@ -45,10 +45,27 @@ Tone: Like a senior founder mentor. Direct, no-fluff, concise. Use specific Indi
     // Strip <think>...</think> blocks cleanly
     content = content.replace(/<think>[\s\S]*?<\/think>/g, "").trim();
 
-    return new Response(content, {
+    // Stream the clean content word by word for typewriter effect
+    const encoder = new TextEncoder();
+    const words = content.split(" ");
+
+    const stream = new ReadableStream({
+      async start(controller) {
+        for (let i = 0; i < words.length; i++) {
+          const chunk = i === 0 ? words[i] : " " + words[i];
+          controller.enqueue(encoder.encode(chunk));
+          // Small delay for typewriter effect
+          await new Promise((r) => setTimeout(r, 18));
+        }
+        controller.close();
+      },
+    });
+
+    return new Response(stream, {
       headers: {
         "Content-Type": "text/plain; charset=utf-8",
         "Cache-Control": "no-cache",
+        "X-Accel-Buffering": "no",
       },
     });
 
