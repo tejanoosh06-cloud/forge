@@ -4,24 +4,84 @@ import { useState, useRef, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
-const LOADING_MESSAGES = [
-  "Thinking like a senior founder...",
-  "Consulting Indian VC playbooks...",
-  "Checking DPIIT guidelines...",
-  "Pulling up GST rules...",
-  "Analyzing the Indian market...",
-  "Connecting the dots...",
-  "Drafting a sharp answer...",
-  "Looking up MCA filings...",
-  "Reviewing FEMA compliance...",
-  "Crunching the numbers...",
-];
+// Topic-specific loading message banks
+const LOADING_MESSAGE_BANKS = {
+  fundraising: [
+    "Consulting Indian VC playbooks...",
+    "Pulling up recent funding data...",
+    "Thinking like a Peak XV partner...",
+    "Reviewing angel networks...",
+  ],
+  tax: [
+    "Pulling up GST rules...",
+    "Reviewing Income Tax sections...",
+    "Checking Section 80IAC benefits...",
+    "Looking up tax compliance...",
+  ],
+  legal: [
+    "Reading MCA guidelines...",
+    "Reviewing ROC compliance...",
+    "Checking the Companies Act...",
+    "Pulling up legal precedents...",
+  ],
+  compliance: [
+    "Checking DPIIT guidelines...",
+    "Reviewing FEMA compliance...",
+    "Looking up MCA filings...",
+    "Checking regulatory rules...",
+  ],
+  hiring: [
+    "Reviewing ESOP frameworks...",
+    "Pulling up Indian hiring norms...",
+    "Checking labour laws...",
+    "Drafting the right structure...",
+  ],
+  marketing: [
+    "Analyzing Indian market data...",
+    "Reviewing GTM playbooks...",
+    "Looking up channel strategies...",
+    "Studying Bharat market trends...",
+  ],
+  product: [
+    "Reviewing product playbooks...",
+    "Analyzing user psychology...",
+    "Pulling up case studies...",
+    "Thinking through tradeoffs...",
+  ],
+  payments: [
+    "Reviewing UPI flows...",
+    "Checking Razorpay docs...",
+    "Looking up payment regs...",
+    "Analyzing transaction models...",
+  ],
+  general: [
+    "Thinking like a senior founder...",
+    "Connecting the dots...",
+    "Drafting a sharp answer...",
+    "Crunching the details...",
+    "Looking at this from all angles...",
+    "Working through this carefully...",
+  ],
+};
+
+function pickMessageBank(question) {
+  const q = question.toLowerCase();
+  if (/raise|funding|fundrais|vc|angel|investor|seed|series|safe note|valuation|pitch|term sheet/.test(q)) return "fundraising";
+  if (/gst|tax|income tax|80iac|tds|cess|deduction/.test(q)) return "tax";
+  if (/legal|contract|agreement|nda|incorporation|llp|pvt ltd|company|register|roc|mca/.test(q)) return "legal";
+  if (/dpiit|fema|fdi|compliance|regulation|startup india|msme/.test(q)) return "compliance";
+  if (/hire|hiring|employee|esop|salary|recruit|team|cto|cofounder|co-founder/.test(q)) return "hiring";
+  if (/market|gtm|growth|customer|sales|tier 2|tier 3|bharat|brand|positioning|launch/.test(q)) return "marketing";
+  if (/product|feature|user|ux|design|mvp|build|launch/.test(q)) return "product";
+  if (/upi|razorpay|cashfree|payment|paytm|phonepe|gateway/.test(q)) return "payments";
+  return "general";
+}
 
 export default function Home() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const [loadingMessage, setLoadingMessage] = useState(LOADING_MESSAGES[0]);
+  const [loadingMessage, setLoadingMessage] = useState("Thinking...");
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [chats, setChats] = useState([]);
   const [activeChatId, setActiveChatId] = useState(null);
@@ -49,14 +109,19 @@ export default function Home() {
 
   useEffect(() => {
     if (!loading) return;
+
+    const lastUserMessage = [...messages].reverse().find((m) => m.role === "user");
+    const bankKey = lastUserMessage ? pickMessageBank(lastUserMessage.content) : "general";
+    const bank = LOADING_MESSAGE_BANKS[bankKey];
+
     let idx = 0;
-    setLoadingMessage(LOADING_MESSAGES[0]);
+    setLoadingMessage(bank[0]);
     const interval = setInterval(() => {
-      idx = (idx + 1) % LOADING_MESSAGES.length;
-      setLoadingMessage(LOADING_MESSAGES[idx]);
+      idx = (idx + 1) % bank.length;
+      setLoadingMessage(bank[idx]);
     }, 1800);
     return () => clearInterval(interval);
-  }, [loading]);
+  }, [loading, messages]);
 
   async function sendMessage(text) {
     const messageText = (text || input).trim();
@@ -121,7 +186,6 @@ export default function Home() {
   const isEmpty = messages.length === 0;
   const isDark = theme === "dark";
 
-  // Reusable chat input box (used in both empty hero and bottom layouts)
   const chatInputBox = (
     <div className="relative w-full">
       <div className="absolute -inset-6 bg-gradient-to-r from-blue-400/10 via-purple-400/10 to-pink-300/10 blur-3xl opacity-50 rounded-full pointer-events-none"></div>
@@ -283,7 +347,6 @@ export default function Home() {
         )}
 
         {isEmpty ? (
-          // EMPTY STATE — hero + chat box together, centered
           <div className="flex-1 flex flex-col items-center justify-center px-6">
             <div className="w-full max-w-2xl flex flex-col items-center">
               <h1 className="text-4xl md:text-5xl font-semibold mb-4 tracking-tight text-center">
@@ -301,7 +364,6 @@ export default function Home() {
             </div>
           </div>
         ) : (
-          // CHATTING STATE — messages scroll, chat box at bottom
           <>
             <div ref={scrollRef} className="flex-1 overflow-y-auto">
               <div className="max-w-3xl mx-auto px-6 py-8">

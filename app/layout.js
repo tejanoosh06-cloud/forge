@@ -12,6 +12,14 @@ export const metadata = {
   description: "Your AI co-founder for the Indian startup journey.",
 };
 
+export const viewport = {
+  width: "device-width",
+  initialScale: 1,
+  maximumScale: 1,
+  userScalable: false,
+  viewportFit: "cover",
+};
+
 export default function RootLayout({ children }) {
   return (
     <html lang="en" className="dark">
