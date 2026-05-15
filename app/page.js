@@ -4,13 +4,6 @@ import { useState, useRef, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 
-const SUGGESTED_QUESTIONS = [
-  { text: "Pvt Ltd vs LLP — which fits my startup?" },
-  { text: "How do I get DPIIT recognition?" },
-  { text: "How to raise a pre-seed round in India?" },
-  { text: "Do I need GST registration as a freelancer?" },
-];
-
 const LOADING_MESSAGES = [
   "Thinking like a senior founder...",
   "Consulting Indian VC playbooks...",
@@ -36,13 +29,11 @@ export default function Home() {
   const scrollRef = useRef(null);
   const inputRef = useRef(null);
 
-  // Load saved theme on mount
   useEffect(() => {
     const saved = typeof window !== "undefined" ? localStorage.getItem("forge-theme") : null;
     if (saved === "light" || saved === "dark") setTheme(saved);
   }, []);
 
-  // Apply theme to html element
   useEffect(() => {
     if (typeof window === "undefined") return;
     document.documentElement.classList.toggle("dark", theme === "dark");
@@ -205,11 +196,8 @@ export default function Home() {
             )}
           </div>
 
-          {/* Theme toggle + footer */}
-          <div className={`px-3 py-3 border-t flex items-center justify-between ${isDark ? "border-white/5" : "border-black/5"}`}>
-            <div className={`text-[11px] ${isDark ? "text-neutral-500" : "text-neutral-500"}`}>
-              Powered by Sarvam AI
-            </div>
+          {/* Theme toggle only — no Sarvam footer */}
+          <div className={`px-3 py-3 border-t flex items-center justify-end ${isDark ? "border-white/5" : "border-black/5"}`}>
             <button
               onClick={() => setTheme(isDark ? "light" : "dark")}
               className={`p-1.5 rounded-md transition-colors ${
@@ -218,13 +206,11 @@ export default function Home() {
               aria-label="Toggle theme"
             >
               {isDark ? (
-                // Sun icon for switching to light
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <circle cx="12" cy="12" r="4"/>
                   <path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/>
                 </svg>
               ) : (
-                // Moon icon for switching to dark
                 <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
                 </svg>
@@ -259,25 +245,9 @@ export default function Home() {
                     What are you building?
                   </span>
                 </h1>
-                <p className={`max-w-md mb-12 leading-relaxed text-[15px] ${isDark ? "text-neutral-500" : "text-neutral-500"}`}>
-                  Your AI co-founder for the Indian startup journey. Ask anything — tax, compliance, fundraising, GTM.
+                <p className={`max-w-md leading-relaxed text-[15px] ${isDark ? "text-neutral-500" : "text-neutral-500"}`}>
+                  Your AI co-founder for India.
                 </p>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 w-full max-w-2xl">
-                  {SUGGESTED_QUESTIONS.map((q, i) => (
-                    <button
-                      key={i}
-                      onClick={() => sendMessage(q.text)}
-                      className={`text-left px-4 py-3 rounded-xl backdrop-blur-xl text-sm transition-all duration-200 ${
-                        isDark
-                          ? "border border-white/10 hover:border-white/20 bg-white/[0.02] hover:bg-white/[0.05] text-neutral-400 hover:text-neutral-100"
-                          : "border border-black/10 hover:border-black/20 bg-black/[0.02] hover:bg-black/[0.04] text-neutral-600 hover:text-neutral-900"
-                      }`}
-                    >
-                      {q.text}
-                    </button>
-                  ))}
-                </div>
               </div>
             ) : (
               <div className="space-y-6 pt-4">
@@ -325,13 +295,11 @@ export default function Home() {
           </div>
         </div>
 
-        {/* INPUT — subtle moving pastel gradient border */}
+        {/* INPUT */}
         <div className="relative px-4 pb-6 pt-4">
           <div className="relative max-w-3xl mx-auto">
-            {/* Subtle ambient halo behind chat box */}
             <div className="absolute -inset-6 bg-gradient-to-r from-blue-400/10 via-purple-400/10 to-pink-300/10 blur-3xl opacity-50 rounded-full pointer-events-none"></div>
 
-            {/* Moving pastel gradient border (Sarvam-style) */}
             <div className="relative rounded-2xl p-[1.5px] forge-gradient-border">
               <div className={`flex gap-2 items-end rounded-2xl ${
                 isDark ? "bg-neutral-950/80" : "bg-white/80"
@@ -402,7 +370,6 @@ export default function Home() {
         ::-webkit-scrollbar-thumb { background: rgba(128,128,128,0.2); border-radius: 10px; }
         ::-webkit-scrollbar-thumb:hover { background: rgba(128,128,128,0.35); }
 
-        /* Markdown */
         .markdown-body { line-height: 1.7; }
         .markdown-body h1 { font-size: 1.5rem; font-weight: 700; margin: 1.5rem 0 0.75rem; letter-spacing: -0.02em; }
         .markdown-body h2 { font-size: 1.25rem; font-weight: 700; margin: 1.5rem 0 0.5rem; letter-spacing: -0.01em; }
