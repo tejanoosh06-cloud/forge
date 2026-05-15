@@ -1,4 +1,4 @@
-"use client";
+]"use client";
 
 import { useState, useRef, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
@@ -121,6 +121,53 @@ export default function Home() {
   const isEmpty = messages.length === 0;
   const isDark = theme === "dark";
 
+  // Reusable chat input box (used in both empty hero and bottom layouts)
+  const chatInputBox = (
+    <div className="relative w-full">
+      <div className="absolute -inset-6 bg-gradient-to-r from-blue-400/10 via-purple-400/10 to-pink-300/10 blur-3xl opacity-50 rounded-full pointer-events-none"></div>
+
+      <div className="relative rounded-2xl p-[1.5px] forge-gradient-border">
+        <div className={`flex gap-2 items-end rounded-2xl ${
+          isDark ? "bg-neutral-950/80" : "bg-white/80"
+        } backdrop-blur-2xl`}>
+          <textarea
+            ref={inputRef}
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+              }
+            }}
+            placeholder="Ask anything..."
+            rows={1}
+            className={`flex-1 resize-none px-5 py-4 bg-transparent outline-none text-[15px] max-h-32 ${
+              isDark ? "text-neutral-100 placeholder-neutral-500" : "text-neutral-900 placeholder-neutral-400"
+            }`}
+            disabled={loading}
+          />
+          <button
+            onClick={() => sendMessage()}
+            disabled={!input.trim() || loading}
+            className={`m-2 w-9 h-9 rounded-lg flex items-center justify-center transition-all flex-shrink-0 ${
+              input.trim() && !loading
+                ? "bg-gradient-to-br from-blue-500 via-purple-500 to-pink-400 hover:opacity-90 text-white shadow-lg shadow-purple-500/20"
+                : isDark
+                  ? "bg-white/5 text-neutral-600 cursor-not-allowed"
+                  : "bg-black/5 text-neutral-400 cursor-not-allowed"
+            }`}
+            aria-label="Send"
+          >
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+              <path d="M8 14V2M8 2L3 7M8 2L13 7" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
   return (
     <div className={`flex h-screen overflow-hidden ${isDark ? "bg-black text-neutral-100" : "bg-[#FAFAF7] text-neutral-900"}`}>
       {/* SIDEBAR */}
@@ -196,7 +243,6 @@ export default function Home() {
             )}
           </div>
 
-          {/* Theme toggle only — no Sarvam footer */}
           <div className={`px-3 py-3 border-t flex items-center justify-end ${isDark ? "border-white/5" : "border-black/5"}`}>
             <button
               onClick={() => setTheme(isDark ? "light" : "dark")}
@@ -236,115 +282,83 @@ export default function Home() {
           </button>
         )}
 
-        <div ref={scrollRef} className="flex-1 overflow-y-auto">
-          <div className="max-w-3xl mx-auto px-6 py-8">
-            {isEmpty ? (
-              <div className="flex flex-col items-center justify-center text-center min-h-[calc(100vh-220px)]">
-                <h1 className="text-4xl md:text-5xl font-semibold mb-4 tracking-tight">
-                  <span className="bg-gradient-to-r from-blue-400 via-purple-400 to-pink-300 bg-clip-text text-transparent">
-                    What are you building?
-                  </span>
-                </h1>
-                <p className={`max-w-md leading-relaxed text-[15px] ${isDark ? "text-neutral-500" : "text-neutral-500"}`}>
-                  Your AI co-founder for India.
-                </p>
-              </div>
-            ) : (
-              <div className="space-y-6 pt-4">
-                {messages.map((msg, i) => (
-                  <div
-                    key={i}
-                    className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"} animate-in fade-in slide-in-from-bottom-2 duration-300`}
-                  >
-                    {msg.role === "user" ? (
-                      <div className={`max-w-[85%] whitespace-pre-wrap leading-relaxed text-[15px] px-4 py-3 rounded-2xl rounded-br-md backdrop-blur-xl ${
-                        isDark
-                          ? "bg-white/5 border border-white/10 text-neutral-100"
-                          : "bg-black/5 border border-black/10 text-neutral-900"
-                      }`}>
-                        {msg.content}
-                      </div>
-                    ) : (
-                      <div className={`max-w-[85%] text-[15px] markdown-body ${isDark ? "text-neutral-200" : "text-neutral-800"}`}>
-                        <ReactMarkdown remarkPlugins={[remarkGfm]}>
-                          {msg.content}
-                        </ReactMarkdown>
-                      </div>
-                    )}
-                  </div>
-                ))}
-                {loading && (
-                  <div className="flex justify-start animate-in fade-in duration-300">
-                    <div className="flex items-center gap-3 px-1 py-3">
-                      <div className="flex items-center gap-1.5">
-                        <div className="w-1.5 h-1.5 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 animate-bounce" style={{ animationDelay: "0ms" }}></div>
-                        <div className="w-1.5 h-1.5 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 animate-bounce" style={{ animationDelay: "150ms" }}></div>
-                        <div className="w-1.5 h-1.5 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 animate-bounce" style={{ animationDelay: "300ms" }}></div>
-                      </div>
-                      <span
-                        key={loadingMessage}
-                        className="text-sm bg-gradient-to-r from-blue-400 via-purple-400 to-pink-300 bg-clip-text text-transparent animate-in fade-in duration-500"
-                      >
-                        {loadingMessage}
-                      </span>
-                    </div>
-                  </div>
-                )}
-              </div>
-            )}
+        {isEmpty ? (
+          // EMPTY STATE — hero + chat box together, centered
+          <div className="flex-1 flex flex-col items-center justify-center px-6">
+            <div className="w-full max-w-2xl flex flex-col items-center">
+              <h1 className="text-4xl md:text-5xl font-semibold mb-4 tracking-tight text-center">
+                <span className="bg-gradient-to-r from-blue-400 via-purple-400 to-pink-300 bg-clip-text text-transparent">
+                  What are you building?
+                </span>
+              </h1>
+              <p className={`max-w-md leading-relaxed text-[15px] text-center mb-10 ${isDark ? "text-neutral-500" : "text-neutral-500"}`}>
+                Your AI co-founder for India.
+              </p>
+              {chatInputBox}
+              <p className={`text-[11px] text-center mt-3 ${isDark ? "text-neutral-700" : "text-neutral-400"}`}>
+                Forge can make mistakes. Verify important info.
+              </p>
+            </div>
           </div>
-        </div>
-
-        {/* INPUT */}
-        <div className="relative px-4 pb-6 pt-4">
-          <div className="relative max-w-3xl mx-auto">
-            <div className="absolute -inset-6 bg-gradient-to-r from-blue-400/10 via-purple-400/10 to-pink-300/10 blur-3xl opacity-50 rounded-full pointer-events-none"></div>
-
-            <div className="relative rounded-2xl p-[1.5px] forge-gradient-border">
-              <div className={`flex gap-2 items-end rounded-2xl ${
-                isDark ? "bg-neutral-950/80" : "bg-white/80"
-              } backdrop-blur-2xl`}>
-                <textarea
-                  ref={inputRef}
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && !e.shiftKey) {
-                      e.preventDefault();
-                      sendMessage();
-                    }
-                  }}
-                  placeholder="Ask anything..."
-                  rows={1}
-                  className={`flex-1 resize-none px-5 py-4 bg-transparent outline-none text-[15px] max-h-32 ${
-                    isDark ? "text-neutral-100 placeholder-neutral-500" : "text-neutral-900 placeholder-neutral-400"
-                  }`}
-                  disabled={loading}
-                />
-                <button
-                  onClick={() => sendMessage()}
-                  disabled={!input.trim() || loading}
-                  className={`m-2 w-9 h-9 rounded-lg flex items-center justify-center transition-all flex-shrink-0 ${
-                    input.trim() && !loading
-                      ? "bg-gradient-to-br from-blue-500 via-purple-500 to-pink-400 hover:opacity-90 text-white shadow-lg shadow-purple-500/20"
-                      : isDark
-                        ? "bg-white/5 text-neutral-600 cursor-not-allowed"
-                        : "bg-black/5 text-neutral-400 cursor-not-allowed"
-                  }`}
-                  aria-label="Send"
-                >
-                  <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-                    <path d="M8 14V2M8 2L3 7M8 2L13 7" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-                  </svg>
-                </button>
+        ) : (
+          // CHATTING STATE — messages scroll, chat box at bottom
+          <>
+            <div ref={scrollRef} className="flex-1 overflow-y-auto">
+              <div className="max-w-3xl mx-auto px-6 py-8">
+                <div className="space-y-6 pt-4">
+                  {messages.map((msg, i) => (
+                    <div
+                      key={i}
+                      className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"} animate-in fade-in slide-in-from-bottom-2 duration-300`}
+                    >
+                      {msg.role === "user" ? (
+                        <div className={`max-w-[85%] whitespace-pre-wrap leading-relaxed text-[15px] px-4 py-3 rounded-2xl rounded-br-md backdrop-blur-xl ${
+                          isDark
+                            ? "bg-white/5 border border-white/10 text-neutral-100"
+                            : "bg-black/5 border border-black/10 text-neutral-900"
+                        }`}>
+                          {msg.content}
+                        </div>
+                      ) : (
+                        <div className={`max-w-[85%] text-[15px] markdown-body ${isDark ? "text-neutral-200" : "text-neutral-800"}`}>
+                          <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                            {msg.content}
+                          </ReactMarkdown>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                  {loading && (
+                    <div className="flex justify-start animate-in fade-in duration-300">
+                      <div className="flex items-center gap-3 px-1 py-3">
+                        <div className="flex items-center gap-1.5">
+                          <div className="w-1.5 h-1.5 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 animate-bounce" style={{ animationDelay: "0ms" }}></div>
+                          <div className="w-1.5 h-1.5 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 animate-bounce" style={{ animationDelay: "150ms" }}></div>
+                          <div className="w-1.5 h-1.5 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 animate-bounce" style={{ animationDelay: "300ms" }}></div>
+                        </div>
+                        <span
+                          key={loadingMessage}
+                          className="text-sm bg-gradient-to-r from-blue-400 via-purple-400 to-pink-300 bg-clip-text text-transparent animate-in fade-in duration-500"
+                        >
+                          {loadingMessage}
+                        </span>
+                      </div>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 
-            <p className={`text-[11px] text-center mt-3 ${isDark ? "text-neutral-700" : "text-neutral-400"}`}>
-              Forge can make mistakes. Verify important info.
-            </p>
-          </div>
-        </div>
+            <div className="relative px-4 pb-6 pt-4">
+              <div className="max-w-3xl mx-auto">
+                {chatInputBox}
+                <p className={`text-[11px] text-center mt-3 ${isDark ? "text-neutral-700" : "text-neutral-400"}`}>
+                  Forge can make mistakes. Verify important info.
+                </p>
+              </div>
+            </div>
+          </>
+        )}
       </main>
 
       <style jsx global>{`
