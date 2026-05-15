@@ -93,17 +93,16 @@ export default function Home() {
       <aside
         className={`${
           sidebarOpen ? "w-64" : "w-0"
-        } transition-all duration-300 ease-in-out overflow-hidden border-r border-neutral-900 bg-[#0A0A0A] flex-shrink-0`}
+        } transition-all duration-300 ease-in-out overflow-hidden border-r border-white/5 bg-[#0A0A0A] flex-shrink-0`}
       >
         <div className="w-64 h-full flex flex-col">
-          {/* Sidebar header */}
           <div className="px-4 py-4 flex items-center justify-between">
             <span className="font-semibold tracking-tight text-[15px] bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">
               Forge
             </span>
             <button
               onClick={() => setSidebarOpen(false)}
-              className="p-1.5 rounded-md hover:bg-neutral-800 text-neutral-500 hover:text-neutral-200 transition-colors"
+              className="p-1.5 rounded-md hover:bg-white/5 text-neutral-500 hover:text-neutral-200 transition-colors"
               aria-label="Close sidebar"
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -112,11 +111,10 @@ export default function Home() {
             </button>
           </div>
 
-          {/* New chat button */}
           <div className="px-3 pb-3">
             <button
               onClick={newChat}
-              className="w-full flex items-center gap-2 px-3 py-2.5 rounded-lg hover:bg-neutral-900 text-[13px] font-medium text-neutral-300 hover:text-neutral-100 transition-colors"
+              className="w-full flex items-center gap-2 px-3 py-2.5 rounded-lg hover:bg-white/5 text-[13px] font-medium text-neutral-300 hover:text-neutral-100 transition-colors"
             >
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/>
@@ -125,7 +123,6 @@ export default function Home() {
             </button>
           </div>
 
-          {/* Chat history */}
           <div className="flex-1 overflow-y-auto px-2 pb-4">
             {chats.length === 0 ? (
               <div className="px-3 py-2 text-xs text-neutral-600">No chats yet</div>
@@ -141,8 +138,8 @@ export default function Home() {
                       onClick={() => loadChat(chat)}
                       className={`group w-full text-left px-3 py-2 rounded-lg text-[13px] transition-colors flex items-center justify-between gap-2 ${
                         activeChatId === chat.id
-                          ? "bg-neutral-900 text-neutral-100"
-                          : "text-neutral-400 hover:bg-neutral-900/50 hover:text-neutral-200"
+                          ? "bg-white/5 text-neutral-100"
+                          : "text-neutral-400 hover:bg-white/[0.03] hover:text-neutral-200"
                       }`}
                     >
                       <span className="truncate flex-1">{chat.title}</span>
@@ -161,8 +158,7 @@ export default function Home() {
             )}
           </div>
 
-          {/* Sidebar footer */}
-          <div className="px-4 py-3 border-t border-neutral-900">
+          <div className="px-4 py-3 border-t border-white/5">
             <div className="text-[11px] text-neutral-500">
               Powered by Sarvam AI
             </div>
@@ -170,13 +166,12 @@ export default function Home() {
         </div>
       </aside>
 
-      {/* MAIN AREA */}
+      {/* MAIN */}
       <main className="flex-1 flex flex-col min-w-0 relative">
-        {/* Sidebar toggle when closed */}
         {!sidebarOpen && (
           <button
             onClick={() => setSidebarOpen(true)}
-            className="absolute top-4 left-4 z-20 p-2 rounded-lg hover:bg-neutral-900 text-neutral-400 hover:text-neutral-100 transition-colors"
+            className="absolute top-4 left-4 z-20 p-2 rounded-lg hover:bg-white/5 text-neutral-400 hover:text-neutral-100 transition-colors"
             aria-label="Open sidebar"
           >
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -185,11 +180,10 @@ export default function Home() {
           </button>
         )}
 
-        {/* Chat content */}
         <div ref={scrollRef} className="flex-1 overflow-y-auto">
           <div className="max-w-3xl mx-auto px-6 py-8">
             {isEmpty ? (
-              <div className="flex flex-col items-center justify-center text-center min-h-[calc(100vh-180px)]">
+              <div className="flex flex-col items-center justify-center text-center min-h-[calc(100vh-220px)]">
                 <h1 className="text-4xl md:text-5xl font-semibold mb-4 tracking-tight">
                   <span className="bg-gradient-to-r from-blue-400 via-purple-400 to-blue-400 bg-clip-text text-transparent">
                     What are you building?
@@ -204,7 +198,7 @@ export default function Home() {
                     <button
                       key={i}
                       onClick={() => sendMessage(q.text)}
-                      className="text-left px-4 py-3 rounded-xl border border-neutral-900 hover:border-neutral-700 bg-transparent hover:bg-neutral-950 text-sm text-neutral-400 hover:text-neutral-100 transition-all duration-150"
+                      className="text-left px-4 py-3 rounded-xl border border-white/10 hover:border-white/20 bg-white/[0.02] backdrop-blur-xl hover:bg-white/[0.05] text-sm text-neutral-400 hover:text-neutral-100 transition-all duration-200"
                     >
                       {q.text}
                     </button>
@@ -221,7 +215,7 @@ export default function Home() {
                     <div
                       className={`max-w-[85%] whitespace-pre-wrap leading-relaxed text-[15px] ${
                         msg.role === "user"
-                          ? "bg-neutral-900 text-neutral-100 px-4 py-3 rounded-2xl rounded-br-md"
+                          ? "bg-white/5 backdrop-blur-xl border border-white/10 text-neutral-100 px-4 py-3 rounded-2xl rounded-br-md"
                           : "text-neutral-200"
                       }`}
                     >
@@ -243,12 +237,15 @@ export default function Home() {
           </div>
         </div>
 
-        {/* INPUT */}
-        <div className="px-4 pb-6 pt-2">
-          <div className="max-w-3xl mx-auto">
-            {/* Moving gradient border, no drop shadow */}
-            <div className="relative rounded-2xl p-[1.5px] bg-[linear-gradient(90deg,#3b82f6,#a855f7,#3b82f6)] bg-[length:200%_100%] animate-gradient">
-              <div className="flex gap-2 items-end bg-black rounded-2xl">
+        {/* INPUT — refined frosted glass with subtle ambient glow */}
+        <div className="relative px-4 pb-6 pt-4">
+          <div className="relative max-w-3xl mx-auto">
+            {/* Subtle gradient glow halo behind the chat box */}
+            <div className="absolute -inset-4 bg-gradient-to-r from-blue-600/10 via-purple-600/10 to-blue-600/10 blur-2xl opacity-60 rounded-full pointer-events-none"></div>
+
+            {/* The actual chat box */}
+            <div className="relative bg-neutral-950/80 backdrop-blur-2xl rounded-2xl border border-white/10 hover:border-white/20 focus-within:border-white/20 transition-colors shadow-2xl shadow-black/50">
+              <div className="flex gap-2 items-end">
                 <textarea
                   ref={inputRef}
                   value={input}
@@ -261,13 +258,13 @@ export default function Home() {
                   }}
                   placeholder="Ask anything..."
                   rows={1}
-                  className="flex-1 resize-none px-4 py-3.5 bg-transparent outline-none text-neutral-100 placeholder-neutral-600 text-[15px] max-h-32"
+                  className="flex-1 resize-none px-5 py-4 bg-transparent outline-none text-neutral-100 placeholder-neutral-500 text-[15px] max-h-32"
                   disabled={loading}
                 />
                 <button
                   onClick={() => sendMessage()}
                   disabled={!input.trim() || loading}
-                  className="m-1.5 w-9 h-9 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 disabled:from-neutral-800 disabled:to-neutral-800 disabled:text-neutral-600 disabled:cursor-not-allowed text-white flex items-center justify-center transition-all flex-shrink-0"
+                  className="m-2 w-9 h-9 rounded-lg bg-gradient-to-br from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 disabled:from-white/5 disabled:to-white/5 disabled:text-neutral-600 disabled:cursor-not-allowed text-white flex items-center justify-center transition-all flex-shrink-0 shadow-lg shadow-purple-500/20 disabled:shadow-none"
                   aria-label="Send"
                 >
                   <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
@@ -285,17 +282,10 @@ export default function Home() {
       </main>
 
       <style jsx global>{`
-        @keyframes gradient {
-          0% { background-position: 0% 50%; }
-          100% { background-position: 200% 50%; }
-        }
-        .animate-gradient {
-          animation: gradient 3s linear infinite;
-        }
         ::-webkit-scrollbar { width: 6px; }
         ::-webkit-scrollbar-track { background: transparent; }
-        ::-webkit-scrollbar-thumb { background: #1a1a1a; border-radius: 10px; }
-        ::-webkit-scrollbar-thumb:hover { background: #2a2a2a; }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.05); border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(255,255,255,0.1); }
       `}</style>
     </div>
   );
