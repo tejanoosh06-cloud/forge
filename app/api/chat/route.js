@@ -26,7 +26,7 @@ Tone: Like a senior founder mentor. Direct, no-fluff, concise. Use specific Indi
         ],
         temperature: 0.5,
         max_tokens: 2048,
-        stream: true,
+        stream: false,
       }),
     });
 
@@ -39,92 +39,22 @@ Tone: Like a senior founder mentor. Direct, no-fluff, concise. Use specific Indi
       });
     }
 
-    // Transform Sarvam's SSE stream into clean text chunks for the browser
-    const encoder = new TextEncoder();
-    const decoder = new TextDecoder();
+    const data = await sarvamResponse.json();
+    let content = data.choices?.[0]?.message?.content || "No response received.";
 
-    const stream = new ReadableStream({
-      async start(controller) {
-        const reader = sarvamResponse.body.getReader();
-        let buffer = "";
-        let insideThinkBlock = false;
+    // Strip <think>...</think> blocks cleanly
+    content = content.replace(/<think>[\s\S]*?<\/think>/g, "").trim();
 
-        try {
-          while (true) {
-            const { done, value } = await reader.read();
-            if (done) break;
-
-            buffer += decoder.decode(value, { stream: true });
-            const lines = buffer.split("\n");
-            buffer = lines.pop() || "";
-
-            for (const line of lines) {
-              const trimmed = line.trim();
-              if (!trimmed || !trimmed.startsWith("data: ")) continue;
-              const data = trimmed.slice(6);
-              if (data === "[DONE]") {
-                controller.close();
-                return;
-              }
-
-              try {
-                const parsed = JSON.parse(data);
-                let content = parsed.choices?.[0]?.delta?.content || "";
-                if (!content) continue;
-
-                // Filter out <think>...</think> blocks across chunks
-                let output = "";
-                let i = 0;
-                while (i < content.length) {
-                  if (!insideThinkBlock) {
-                    const thinkStart = content.indexOf("<think>", i);
-                    if (thinkStart === -1) {
-                      output += content.slice(i);
-                      break;
-                    } else {
-                      output += content.slice(i, thinkStart);
-                      i = thinkStart + 7;
-                      insideThinkBlock = true;
-                    }
-                  } else {
-                    const thinkEnd = content.indexOf("</think>", i);
-                    const thinkEndAlt = content.indexOf("</ink>", i);
-                    const endIdx = thinkEnd !== -1 ? thinkEnd : thinkEndAlt;
-                    if (endIdx === -1) {
-                      i = content.length;
-                      break;
-                    } else {
-                      i = endIdx + (thinkEnd !== -1 ? 8 : 6);
-                      insideThinkBlock = false;
-                    }
-                  }
-                }
-
-                if (output) {
-                  controller.enqueue(encoder.encode(output));
-                }
-              } catch {
-                // Skip malformed JSON chunks silently
-              }
-            }
-          }
-          controller.close();
-        } catch (err) {
-          console.error("Stream error:", err);
-          controller.error(err);
-        }
-      },
-    });
-
-    return new Response(stream, {
+    return new Response(content, {
       headers: {
         "Content-Type": "text/plain; charset=utf-8",
         "Cache-Control": "no-cache",
       },
     });
+
   } catch (error) {
     console.error("API route error:", error);
-    return new Response(JSON.stringify({ error: "Something went wrong" }), {
+    return new Response(JSON.stringify({ error: error.message }), {
       status: 500,
       headers: { "Content-Type": "application/json" },
     });
