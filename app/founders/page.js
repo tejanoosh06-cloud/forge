@@ -8,6 +8,12 @@ export default function FoundersDirectoryPage() {
   const [founders, setFounders] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("");
+  const [isDark, setIsDark] = useState(true);
+
+  useEffect(() => {
+    const saved = typeof window !== "undefined" ? localStorage.getItem("forge-theme") : null;
+    setIsDark(saved !== "light");
+  }, []);
 
   useEffect(() => {
     async function load() {
@@ -32,12 +38,12 @@ export default function FoundersDirectoryPage() {
   });
 
   return (
-    <div className="min-h-screen bg-black text-neutral-100 py-10 px-6">
+    <div className={`min-h-screen ${isDark ? "bg-black text-neutral-100" : "bg-[#FAFAF7] text-neutral-900"} py-10 px-6`}>
       <div className="max-w-5xl mx-auto">
         <div className="flex items-center justify-between mb-2">
           <button
             onClick={() => router.push("/")}
-            className="text-[13px] text-neutral-500 hover:text-neutral-300 transition-colors flex items-center gap-1"
+            className={`text-[13px] ${isDark ? "text-neutral-500 hover:text-neutral-300" : "text-neutral-500 hover:text-neutral-800"} transition-colors flex items-center gap-1`}
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/>
@@ -51,15 +57,15 @@ export default function FoundersDirectoryPage() {
             Founders on Forge
           </span>
         </h1>
-        <p className="text-neutral-300 mb-2 text-[15px] leading-relaxed max-w-2xl">
+        <p className={`mb-2 text-[15px] leading-relaxed max-w-2xl ${isDark ? "text-neutral-300" : "text-neutral-700"}`}>
           A directory of Indian founders building real things. Discover what other founders are working on, what stage they are at, and where they are based.
         </p>
-        <p className="text-neutral-500 mb-8 text-[13px] max-w-2xl">
+        <p className={`mb-8 text-[13px] max-w-2xl ${isDark ? "text-neutral-500" : "text-neutral-500"}`}>
           {founders.length} {founders.length === 1 ? "founder" : "founders"} listed. Only founders who opted in are shown. To appear here, turn on visibility in your <a href="/profile" className="text-purple-400 hover:text-purple-300 underline underline-offset-2">profile settings</a>.
         </p>
 
         <div className="relative mb-8">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="absolute left-4 top-1/2 -translate-y-1/2 text-neutral-500 pointer-events-none">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={`absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none ${isDark ? "text-neutral-500" : "text-neutral-400"}`}>
             <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
           </svg>
           <input
@@ -67,19 +73,19 @@ export default function FoundersDirectoryPage() {
             value={filter}
             onChange={(e) => setFilter(e.target.value)}
             placeholder="Search by name, sector, city, or what they're building..."
-            className="w-full pl-11 pr-4 py-3 bg-white/5 border border-white/10 rounded-lg outline-none focus:border-purple-400/50 transition-colors text-[14px] placeholder-neutral-600"
+            className={`w-full pl-11 pr-4 py-3 rounded-lg outline-none focus:border-purple-400/50 transition-colors text-[14px] ${isDark ? "bg-white/5 border border-white/10 placeholder-neutral-600 text-neutral-100" : "bg-black/5 border border-black/10 placeholder-neutral-400 text-neutral-900"}`}
           />
         </div>
 
         {loading ? (
-          <div className="text-neutral-500 text-center py-12">Loading founders...</div>
+          <div className={`text-center py-12 ${isDark ? "text-neutral-500" : "text-neutral-500"}`}>Loading founders...</div>
         ) : filtered.length === 0 ? (
           <div className="text-center py-16">
-            <p className="text-neutral-400 text-[15px] mb-2">
+            <p className={`text-[15px] mb-2 ${isDark ? "text-neutral-400" : "text-neutral-600"}`}>
               {founders.length === 0 ? "No founders are public yet." : "No founders match your search."}
             </p>
             {founders.length === 0 && (
-              <p className="text-neutral-600 text-[13px]">
+              <p className={`text-[13px] ${isDark ? "text-neutral-600" : "text-neutral-500"}`}>
                 Be the first — make your profile public from your settings.
               </p>
             )}
@@ -87,7 +93,7 @@ export default function FoundersDirectoryPage() {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             {filtered.map((f) => (
-              <div key={f.id} className="p-5 rounded-2xl bg-white/[0.03] border border-white/10 hover:border-white/20 transition-colors">
+              <div key={f.id} className={`p-5 rounded-2xl transition-colors ${isDark ? "bg-white/[0.03] border border-white/10 hover:border-white/20" : "bg-black/[0.02] border border-black/10 hover:border-black/20"}`}>
                 <div className="flex items-start gap-3 mb-3">
                   {f.avatar_url ? (
                     <img src={f.avatar_url} alt={f.full_name} className="w-10 h-10 rounded-full flex-shrink-0" />
@@ -97,15 +103,15 @@ export default function FoundersDirectoryPage() {
                     </div>
                   )}
                   <div className="flex-1 min-w-0">
-                    <div className="text-[14px] font-semibold truncate">{f.full_name || "Anonymous Founder"}</div>
+                    <div className={`text-[14px] font-semibold truncate ${isDark ? "text-neutral-100" : "text-neutral-900"}`}>{f.full_name || "Anonymous Founder"}</div>
                     {f.company_name && (
-                      <div className="text-[12px] text-neutral-500 truncate">{f.company_name}</div>
+                      <div className={`text-[12px] truncate ${isDark ? "text-neutral-500" : "text-neutral-500"}`}>{f.company_name}</div>
                     )}
                   </div>
                 </div>
 
                 {f.what_building && (
-                  <p className="text-[13px] text-neutral-300 mb-3 leading-relaxed">
+                  <p className={`text-[13px] mb-3 leading-relaxed ${isDark ? "text-neutral-300" : "text-neutral-700"}`}>
                     {f.what_building}
                   </p>
                 )}
