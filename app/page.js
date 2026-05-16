@@ -47,11 +47,16 @@ export default function Home() {
   const supabase = createClient();
 
   useEffect(() => {
-    async function loadUser() {
+    async function init() {
       const { data: { user } } = await supabase.auth.getUser();
       setUser(user);
+      if (user) {
+        const res = await fetch("/api/chats");
+        const data = await res.json();
+        setChats(data.chats || []);
+      }
     }
-    loadUser();
+    init();
   }, []);
 
   async function signOut() {
@@ -91,6 +96,12 @@ export default function Home() {
     return () => clearInterval(interval);
   }, [loading, messages]);
 
+  async function refreshChatList() {
+    const res = await fetch("/api/chats");
+    const data = await res.json();
+    setChats(data.chats || []);
+  }
+
   async function sendMessage(text) {
     const messageText = (text || input).trim();
     if (!messageText || loading || streaming) return;
@@ -102,12 +113,26 @@ export default function Home() {
 
     let chatId = activeChatId;
     if (!chatId) {
-      chatId = Date.now();
-      const title = messageText.slice(0, 40) + (messageText.length > 40 ? "..." : "");
-      setChats((prev) => [{ id: chatId, title, messages: newMessages }, ...prev]);
-      setActiveChatId(chatId);
-    } else {
-      setChats((prev) => prev.map((c) => (c.id === chatId ? { ...c, messages: newMessages } : c)));
+      const title = messageText.slice(0, 60);
+      const createRes = await fetch("/api/chats", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ title }),
+      });
+      const createData = await createRes.json();
+      chatId = createData.chat?.id;
+      if (chatId) {
+        setActiveChatId(chatId);
+        refreshChatList();
+      }
+    }
+
+    if (chatId) {
+      fetch("/api/messages", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ chat_id: chatId, role: "user", content: messageText }),
+      });
     }
 
     try {
@@ -118,10 +143,7 @@ export default function Home() {
       });
 
       if (!res.ok || !res.body) {
-        const errMsg = "Something went wrong. Try again?";
-        const finalMessages = [...newMessages, { role: "assistant", content: errMsg }];
-        setMessages(finalMessages);
-        setChats((prev) => prev.map((c) => (c.id === chatId ? { ...c, messages: finalMessages } : c)));
+        setMessages([...newMessages, { role: "assistant", content: "Something went wrong. Try again?" }]);
         setLoading(false);
         return;
       }
@@ -147,12 +169,16 @@ export default function Home() {
         });
       }
 
-      const finalMessages = [...newMessages, { role: "assistant", content: assistantText }];
-      setChats((prev) => prev.map((c) => (c.id === chatId ? { ...c, messages: finalMessages } : c)));
+      if (chatId && assistantText) {
+        fetch("/api/messages", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ chat_id: chatId, role: "assistant", content: assistantText }),
+        });
+        refreshChatList();
+      }
     } catch (err) {
-      const errMsg = "Network issue. Check your connection?";
-      const finalMessages = [...newMessages, { role: "assistant", content: errMsg }];
-      setMessages(finalMessages);
+      setMessages([...newMessages, { role: "assistant", content: "Network issue. Check your connection?" }]);
     } finally {
       setLoading(false);
       setStreaming(false);
@@ -166,15 +192,19 @@ export default function Home() {
     setInput("");
   }
 
-  function loadChat(chat) {
-    setMessages(chat.messages);
+  async function loadChat(chat) {
     setActiveChatId(chat.id);
+    setMessages([]);
+    const res = await fetch(`/api/chats/${chat.id}`);
+    const data = await res.json();
+    setMessages(data.messages || []);
   }
 
-  function deleteChat(e, id) {
+  async function deleteChat(e, id) {
     e.stopPropagation();
     setChats((prev) => prev.filter((c) => c.id !== id));
     if (activeChatId === id) newChat();
+    await fetch(`/api/chats/${id}`, { method: "DELETE" });
   }
 
   const isEmpty = messages.length === 0;
@@ -232,11 +262,20 @@ export default function Home() {
             </button>
           </div>
 
-          <div className="px-3 pb-3">
+          <div className="px-3 pb-3 space-y-0.5">
             <button onClick={newChat} className={`w-full flex items-center gap-2 px-3 py-2.5 rounded-lg text-[13px] font-medium transition-colors ${isDark ? "hover:bg-white/5 text-neutral-300 hover:text-neutral-100" : "hover:bg-black/5 text-neutral-700 hover:text-neutral-900"}`}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
               New chat
             </button>
+            <a href="/founders" className={`w-full flex items-center gap-2 px-3 py-2.5 rounded-lg text-[13px] font-medium transition-colors ${isDark ? "hover:bg-white/5 text-neutral-300 hover:text-neutral-100" : "hover:bg-black/5 text-neutral-700 hover:text-neutral-900"}`}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                <circle cx="9" cy="7" r="4"/>
+                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+              </svg>
+              Founders
+            </a>
           </div>
 
           <div className="flex-1 overflow-y-auto px-2 pb-4">
@@ -259,44 +298,38 @@ export default function Home() {
             )}
           </div>
 
-          {/* USER PROFILE FOOTER */}
           <div className={`relative px-3 py-3 border-t ${isDark ? "border-white/5" : "border-black/5"}`}>
             {userMenuOpen && (
-              <div
-                className={`absolute bottom-full left-3 right-3 mb-2 rounded-lg overflow-hidden shadow-2xl ${
-                  isDark ? "bg-neutral-900 border border-white/10" : "bg-white border border-black/10"
-                }`}
-              >
+              <div className={`absolute bottom-full left-3 right-3 mb-2 rounded-lg overflow-hidden shadow-2xl ${isDark ? "bg-neutral-900 border border-white/10" : "bg-white border border-black/10"}`}>
                 <div className={`px-3 py-2.5 text-[11px] truncate ${isDark ? "text-neutral-500 border-b border-white/5" : "text-neutral-500 border-b border-black/5"}`}>
                   {userEmail}
                 </div>
-                <button
-                  onClick={() => setTheme(isDark ? "light" : "dark")}
-                  className={`w-full text-left px-3 py-2.5 text-[13px] flex items-center gap-2 ${isDark ? "hover:bg-white/5 text-neutral-300" : "hover:bg-black/5 text-neutral-700"}`}
-                >
-                  {isDark ? (
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
-                  ) : (
-                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
-                  )}
+                <a href="/founders" className={`w-full text-left px-3 py-2.5 text-[13px] flex items-center gap-2 ${isDark ? "hover:bg-white/5 text-neutral-300" : "hover:bg-black/5 text-neutral-700"}`}>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+                    <circle cx="9" cy="7" r="4"/>
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+                  </svg>
+                  Founders
+                </a>
+                <a href="/profile" className={`w-full text-left px-3 py-2.5 text-[13px] flex items-center gap-2 ${isDark ? "hover:bg-white/5 text-neutral-300" : "hover:bg-black/5 text-neutral-700"}`}>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+                    <circle cx="12" cy="7" r="4"/>
+                  </svg>
+                  Edit profile
+                </a>
+                <button onClick={() => setTheme(isDark ? "light" : "dark")} className={`w-full text-left px-3 py-2.5 text-[13px] flex items-center gap-2 ${isDark ? "hover:bg-white/5 text-neutral-300" : "hover:bg-black/5 text-neutral-700"}`}>
                   {isDark ? "Light mode" : "Dark mode"}
                 </button>
-                <button
-                  onClick={signOut}
-                  className={`w-full text-left px-3 py-2.5 text-[13px] flex items-center gap-2 ${isDark ? "hover:bg-white/5 text-red-400" : "hover:bg-black/5 text-red-600"}`}
-                >
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
-                  </svg>
+                <button onClick={signOut} className={`w-full text-left px-3 py-2.5 text-[13px] flex items-center gap-2 ${isDark ? "hover:bg-white/5 text-red-400" : "hover:bg-black/5 text-red-600"}`}>
                   Sign out
                 </button>
               </div>
             )}
 
-            <button
-              onClick={() => setUserMenuOpen(!userMenuOpen)}
-              className={`w-full flex items-center gap-2.5 px-2 py-2 rounded-lg transition-colors ${isDark ? "hover:bg-white/5" : "hover:bg-black/5"}`}
-            >
+            <button onClick={() => setUserMenuOpen(!userMenuOpen)} className={`w-full flex items-center gap-2.5 px-2 py-2 rounded-lg transition-colors ${isDark ? "hover:bg-white/5" : "hover:bg-black/5"}`}>
               {userAvatar ? (
                 <img src={userAvatar} alt={userName} className="w-7 h-7 rounded-full flex-shrink-0" />
               ) : (
@@ -304,12 +337,8 @@ export default function Home() {
                   {userInitial}
                 </div>
               )}
-              <span className={`flex-1 text-left text-[13px] font-medium truncate ${isDark ? "text-neutral-200" : "text-neutral-800"}`}>
-                {userName}
-              </span>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={isDark ? "text-neutral-500" : "text-neutral-400"}>
-                <polyline points="6 9 12 15 18 9"/>
-              </svg>
+              <span className={`flex-1 text-left text-[13px] font-medium truncate ${isDark ? "text-neutral-200" : "text-neutral-800"}`}>{userName}</span>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={isDark ? "text-neutral-500" : "text-neutral-400"}><polyline points="6 9 12 15 18 9"/></svg>
             </button>
           </div>
         </div>
@@ -406,10 +435,8 @@ export default function Home() {
         .markdown-body h1 { font-size: 1.5rem; font-weight: 700; margin: 1.5rem 0 0.75rem; letter-spacing: -0.02em; }
         .markdown-body h2 { font-size: 1.25rem; font-weight: 700; margin: 1.5rem 0 0.5rem; letter-spacing: -0.01em; }
         .markdown-body h3 { font-size: 1.05rem; font-weight: 600; margin: 1.25rem 0 0.5rem; }
-        .markdown-body h4 { font-size: 0.95rem; font-weight: 600; margin: 1rem 0 0.5rem; }
         .markdown-body p { margin: 0.5rem 0; }
         .markdown-body strong { font-weight: 600; }
-        .markdown-body em { font-style: italic; }
         .markdown-body ul { list-style: disc; padding-left: 1.5rem; margin: 0.5rem 0; }
         .markdown-body ol { list-style: decimal; padding-left: 1.5rem; margin: 0.5rem 0; }
         .markdown-body li { margin: 0.35rem 0; padding-left: 0.25rem; }
@@ -423,16 +450,10 @@ export default function Home() {
         .markdown-body pre code { background: transparent; padding: 0; }
         .markdown-body blockquote { border-left: 3px solid rgb(168,85,247); padding-left: 1rem; margin: 0.75rem 0; font-style: italic; opacity: 0.85; }
         .markdown-body a { color: rgb(96,165,250); text-decoration: underline; text-underline-offset: 2px; }
-        .markdown-body a:hover { color: rgb(147,197,253); }
-        .dark .markdown-body hr { border-top: 1px solid rgba(255,255,255,0.08); }
-        .light .markdown-body hr { border-top: 1px solid rgba(0,0,0,0.1); }
-        .markdown-body hr { border: none; margin: 1.5rem 0; }
         .markdown-body table { border-collapse: collapse; margin: 0.75rem 0; width: 100%; }
         .dark .markdown-body th, .dark .markdown-body td { border: 1px solid rgba(255,255,255,0.1); }
         .light .markdown-body th, .light .markdown-body td { border: 1px solid rgba(0,0,0,0.1); }
         .markdown-body th, .markdown-body td { padding: 0.5rem 0.75rem; text-align: left; }
-        .dark .markdown-body th { background: rgba(255,255,255,0.03); font-weight: 600; }
-        .light .markdown-body th { background: rgba(0,0,0,0.03); font-weight: 600; }
       `}</style>
     </div>
   );
