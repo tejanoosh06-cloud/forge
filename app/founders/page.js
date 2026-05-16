@@ -46,13 +46,16 @@ export default function FoundersDirectoryPage() {
           </button>
         </div>
 
-        <h1 className="text-3xl md:text-4xl font-semibold mb-2 tracking-tight">
+        <h1 className="text-3xl md:text-4xl font-semibold mb-3 tracking-tight">
           <span className="bg-gradient-to-r from-blue-400 via-purple-400 to-pink-300 bg-clip-text text-transparent">
             Founders on Forge
           </span>
         </h1>
-        <p className="text-neutral-500 mb-8 text-[15px]">
-          {founders.length} founder{founders.length === 1 ? "" : "s"} building publicly. Only founders who opted in are shown here.
+        <p className="text-neutral-300 mb-2 text-[15px] leading-relaxed max-w-2xl">
+          A directory of Indian founders building real things. Discover what other founders are working on, what stage they are at, and where they are based.
+        </p>
+        <p className="text-neutral-500 mb-8 text-[13px] max-w-2xl">
+          {founders.length} {founders.length === 1 ? "founder" : "founders"} listed. Only founders who opted in are shown. To appear here, turn on visibility in your <a href="/profile" className="text-purple-400 hover:text-purple-300 underline underline-offset-2">profile settings</a>.
         </p>
 
         <div className="relative mb-8">
