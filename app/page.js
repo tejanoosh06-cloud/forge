@@ -14,10 +14,12 @@ const LOADING_MESSAGE_BANKS = {
   marketing: ["Analyzing Indian market data...", "Reviewing GTM playbooks...", "Looking up channel strategies...", "Studying Bharat market trends..."],
   product: ["Reviewing product playbooks...", "Analyzing user psychology...", "Pulling up case studies...", "Thinking through tradeoffs..."],
   payments: ["Reviewing UPI flows...", "Checking Razorpay docs...", "Looking up payment regs...", "Analyzing transaction models..."],
+  pdf: ["Reading your document...", "Extracting the key points...", "Analyzing what is in this PDF...", "Cross-referencing with what I know..."],
   general: ["Thinking like a senior founder...", "Connecting the dots...", "Drafting a sharp answer...", "Crunching the details...", "Looking at this from all angles...", "Working through this carefully..."],
 };
 
-function pickMessageBank(question) {
+function pickMessageBank(question, hasPdf) {
+  if (hasPdf) return "pdf";
   const q = question.toLowerCase();
   if (/raise|funding|fundrais|vc|angel|investor|seed|series|safe note|valuation|pitch|term sheet/.test(q)) return "fundraising";
   if (/gst|tax|income tax|80iac|tds|cess|deduction/.test(q)) return "tax";
@@ -28,6 +30,12 @@ function pickMessageBank(question) {
   if (/product|feature|user|ux|design|mvp|build|launch/.test(q)) return "product";
   if (/upi|razorpay|cashfree|payment|paytm|phonepe|gateway/.test(q)) return "payments";
   return "general";
+}
+
+function formatBytes(bytes) {
+  if (bytes < 1024) return bytes + " B";
+  if (bytes < 1024 * 1024) return (bytes / 1024).toFixed(1) + " KB";
+  return (bytes / (1024 * 1024)).toFixed(1) + " MB";
 }
 
 export default function Home() {
@@ -42,8 +50,12 @@ export default function Home() {
   const [theme, setTheme] = useState("dark");
   const [user, setUser] = useState(null);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [attachedFile, setAttachedFile] = useState(null);
+  const [uploading, setUploading] = useState(false);
+  const [uploadError, setUploadError] = useState("");
   const scrollRef = useRef(null);
   const inputRef = useRef(null);
+  const fileInputRef = useRef(null);
   const supabase = createClient();
 
   useEffect(() => {
@@ -85,7 +97,8 @@ export default function Home() {
   useEffect(() => {
     if (!loading) return;
     const lastUserMessage = [...messages].reverse().find((m) => m.role === "user");
-    const bankKey = lastUserMessage ? pickMessageBank(lastUserMessage.content) : "general";
+    const hasPdf = !!attachedFile;
+    const bankKey = lastUserMessage ? pickMessageBank(lastUserMessage.content, hasPdf) : "general";
     const bank = LOADING_MESSAGE_BANKS[bankKey];
     let idx = 0;
     setLoadingMessage(bank[0]);
@@ -94,7 +107,7 @@ export default function Home() {
       setLoadingMessage(bank[idx]);
     }, 1800);
     return () => clearInterval(interval);
-  }, [loading, messages]);
+  }, [loading, messages, attachedFile]);
 
   async function refreshChatList() {
     const res = await fetch("/api/chats");
@@ -102,18 +115,78 @@ export default function Home() {
     setChats(data.chats || []);
   }
 
+  async function handleFileSelect(e) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadError("");
+
+    if (!file.name.toLowerCase().endsWith(".pdf")) {
+      setUploadError("Only PDF files are supported right now.");
+      return;
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      setUploadError("File too large. Max 10 MB.");
+      return;
+    }
+
+    setUploading(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const res = await fetch("/api/upload", { method: "POST", body: formData });
+      const data = await res.json();
+
+      if (!res.ok) {
+        setUploadError(data.error || "Could not read PDF.");
+        setUploading(false);
+        return;
+      }
+
+      setAttachedFile({
+        name: data.filename,
+        size: data.size,
+        text: data.text,
+        truncated: data.truncated,
+      });
+    } catch (err) {
+      setUploadError("Network issue uploading file.");
+    } finally {
+      setUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  }
+
+  function removeAttachedFile() {
+    setAttachedFile(null);
+    setUploadError("");
+  }
+
   async function sendMessage(text) {
     const messageText = (text || input).trim();
-    if (!messageText || loading || streaming) return;
+    if ((!messageText && !attachedFile) || loading || streaming || uploading) return;
 
-    const newMessages = [...messages, { role: "user", content: messageText }];
-    setMessages(newMessages);
+    // Build the user-visible message
+    const userVisibleContent = attachedFile
+      ? `📄 ${attachedFile.name}\n\n${messageText || "What do you think of this document?"}`
+      : messageText;
+
+    // Build the actual message sent to AI (with PDF text appended)
+    const aiPayloadContent = attachedFile
+      ? `[The user attached a PDF named "${attachedFile.name}". Here is its extracted text${attachedFile.truncated ? " (truncated to fit)" : ""}:\n\n---\n${attachedFile.text}\n---\n\nUser's question about this document: ${messageText || "Please review this document and give honest, specific feedback."}]`
+      : messageText;
+
+    const newMessagesForUI = [...messages, { role: "user", content: userVisibleContent }];
+    const newMessagesForAI = [...messages.map(m => ({ role: m.role, content: m.content })), { role: "user", content: aiPayloadContent }];
+
+    setMessages(newMessagesForUI);
     setInput("");
+    const fileSnapshot = attachedFile;
+    setAttachedFile(null);
     setLoading(true);
 
     let chatId = activeChatId;
     if (!chatId) {
-      const title = messageText.slice(0, 60);
+      const title = (messageText || (fileSnapshot ? `Review: ${fileSnapshot.name}` : "New chat")).slice(0, 60);
       const createRes = await fetch("/api/chats", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -131,7 +204,7 @@ export default function Home() {
       fetch("/api/messages", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ chat_id: chatId, role: "user", content: messageText }),
+        body: JSON.stringify({ chat_id: chatId, role: "user", content: userVisibleContent }),
       });
     }
 
@@ -139,11 +212,11 @@ export default function Home() {
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: newMessages }),
+        body: JSON.stringify({ messages: newMessagesForAI }),
       });
 
       if (!res.ok || !res.body) {
-        setMessages([...newMessages, { role: "assistant", content: "Something went wrong. Try again?" }]);
+        setMessages([...newMessagesForUI, { role: "assistant", content: "Something went wrong. Try again?" }]);
         setLoading(false);
         return;
       }
@@ -155,7 +228,7 @@ export default function Home() {
       const decoder = new TextDecoder();
       let assistantText = "";
 
-      setMessages([...newMessages, { role: "assistant", content: "" }]);
+      setMessages([...newMessagesForUI, { role: "assistant", content: "" }]);
 
       while (true) {
         const { done, value } = await reader.read();
@@ -178,7 +251,7 @@ export default function Home() {
         refreshChatList();
       }
     } catch (err) {
-      setMessages([...newMessages, { role: "assistant", content: "Network issue. Check your connection?" }]);
+      setMessages([...newMessagesForUI, { role: "assistant", content: "Network issue. Check your connection?" }]);
     } finally {
       setLoading(false);
       setStreaming(false);
@@ -190,11 +263,14 @@ export default function Home() {
     setMessages([]);
     setActiveChatId(null);
     setInput("");
+    setAttachedFile(null);
+    setUploadError("");
   }
 
   async function loadChat(chat) {
     setActiveChatId(chat.id);
     setMessages([]);
+    setAttachedFile(null);
     const res = await fetch(`/api/chats/${chat.id}`);
     const data = await res.json();
     setMessages(data.messages || []);
@@ -209,7 +285,7 @@ export default function Home() {
 
   const isEmpty = messages.length === 0;
   const isDark = theme === "dark";
-  const isBusy = loading || streaming;
+  const isBusy = loading || streaming || uploading;
 
   const userName = user?.user_metadata?.full_name || user?.user_metadata?.name || user?.email?.split("@")[0] || "Founder";
   const userEmail = user?.email || "";
@@ -219,8 +295,68 @@ export default function Home() {
   const chatInputBox = (
     <div className="relative w-full">
       <div className="absolute -inset-6 bg-gradient-to-r from-blue-400/10 via-purple-400/10 to-pink-300/10 blur-3xl opacity-50 rounded-full pointer-events-none"></div>
+
+      {/* Attached file preview */}
+      {attachedFile && (
+        <div className={`relative mb-2 flex items-center gap-3 px-3 py-2.5 rounded-xl backdrop-blur-xl ${isDark ? "bg-white/5 border border-white/10" : "bg-black/5 border border-black/10"}`}>
+          <div className="w-9 h-9 rounded-lg flex-shrink-0 bg-gradient-to-br from-blue-500 via-purple-500 to-pink-400 flex items-center justify-center">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+              <polyline points="14 2 14 8 20 8"/>
+            </svg>
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className={`text-[13px] font-medium truncate ${isDark ? "text-neutral-100" : "text-neutral-900"}`}>{attachedFile.name}</div>
+            <div className={`text-[11px] ${isDark ? "text-neutral-500" : "text-neutral-500"}`}>
+              {formatBytes(attachedFile.size)}{attachedFile.truncated ? " · truncated" : ""}
+            </div>
+          </div>
+          <button onClick={removeAttachedFile} className={`p-1.5 rounded-lg transition-colors ${isDark ? "hover:bg-white/10 text-neutral-400 hover:text-neutral-100" : "hover:bg-black/10 text-neutral-500 hover:text-neutral-900"}`} aria-label="Remove file">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+            </svg>
+          </button>
+        </div>
+      )}
+
+      {uploadError && (
+        <div className={`relative mb-2 px-3 py-2 rounded-lg text-[12px] ${isDark ? "bg-red-500/10 border border-red-500/20 text-red-300" : "bg-red-500/10 border border-red-500/20 text-red-700"}`}>
+          {uploadError}
+        </div>
+      )}
+
       <div className="relative rounded-2xl p-[1.5px] forge-gradient-border">
-        <div className={`flex gap-2 items-end rounded-2xl ${isDark ? "bg-neutral-950/80" : "bg-white/80"} backdrop-blur-2xl`}>
+        <div className={`flex gap-1 items-end rounded-2xl ${isDark ? "bg-neutral-950/80" : "bg-white/80"} backdrop-blur-2xl`}>
+          {/* Paperclip button */}
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".pdf,application/pdf"
+            onChange={handleFileSelect}
+            className="hidden"
+          />
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            disabled={isBusy}
+            className={`m-2 w-9 h-9 rounded-lg flex items-center justify-center transition-all flex-shrink-0 ${
+              isBusy
+                ? isDark ? "text-neutral-700 cursor-not-allowed" : "text-neutral-300 cursor-not-allowed"
+                : isDark ? "hover:bg-white/5 text-neutral-400 hover:text-neutral-100" : "hover:bg-black/5 text-neutral-500 hover:text-neutral-900"
+            }`}
+            aria-label="Attach PDF"
+            title="Attach PDF (max 10 MB)"
+          >
+            {uploading ? (
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="animate-spin">
+                <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+              </svg>
+            ) : (
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l9.19-9.19a4 4 0 0 1 5.66 5.66l-9.2 9.19a2 2 0 0 1-2.83-2.83l8.49-8.48"/>
+              </svg>
+            )}
+          </button>
+
           <textarea
             ref={inputRef}
             value={input}
@@ -231,15 +367,16 @@ export default function Home() {
                 sendMessage();
               }
             }}
-            placeholder="Ask anything..."
+            placeholder={attachedFile ? "Ask anything about this PDF..." : "Ask anything..."}
             rows={1}
-            className={`flex-1 resize-none px-5 py-4 bg-transparent outline-none text-[15px] max-h-32 ${isDark ? "text-neutral-100 placeholder-neutral-500" : "text-neutral-900 placeholder-neutral-400"}`}
+            className={`flex-1 resize-none px-2 py-4 bg-transparent outline-none text-[15px] max-h-32 ${isDark ? "text-neutral-100 placeholder-neutral-500" : "text-neutral-900 placeholder-neutral-400"}`}
             disabled={isBusy}
           />
+
           <button
             onClick={() => sendMessage()}
-            disabled={!input.trim() || isBusy}
-            className={`m-2 w-9 h-9 rounded-lg flex items-center justify-center transition-all flex-shrink-0 ${input.trim() && !isBusy ? "bg-gradient-to-br from-blue-500 via-purple-500 to-pink-400 hover:opacity-90 text-white shadow-lg shadow-purple-500/20" : isDark ? "bg-white/5 text-neutral-600 cursor-not-allowed" : "bg-black/5 text-neutral-400 cursor-not-allowed"}`}
+            disabled={(!input.trim() && !attachedFile) || isBusy}
+            className={`m-2 w-9 h-9 rounded-lg flex items-center justify-center transition-all flex-shrink-0 ${(input.trim() || attachedFile) && !isBusy ? "bg-gradient-to-br from-blue-500 via-purple-500 to-pink-400 hover:opacity-90 text-white shadow-lg shadow-purple-500/20" : isDark ? "bg-white/5 text-neutral-600 cursor-not-allowed" : "bg-black/5 text-neutral-400 cursor-not-allowed"}`}
             aria-label="Send"
           >
             <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
@@ -301,18 +438,7 @@ export default function Home() {
           <div className={`relative px-3 py-3 border-t ${isDark ? "border-white/5" : "border-black/5"}`}>
             {userMenuOpen && (
               <div className={`absolute bottom-full left-3 right-3 mb-2 rounded-lg overflow-hidden shadow-2xl ${isDark ? "bg-neutral-900 border border-white/10" : "bg-white border border-black/10"}`}>
-                <div className={`px-3 py-2.5 text-[11px] truncate ${isDark ? "text-neutral-500 border-b border-white/5" : "text-neutral-500 border-b border-black/5"}`}>
-                  {userEmail}
-                </div>
-                <a href="/founders" className={`w-full text-left px-3 py-2.5 text-[13px] flex items-center gap-2 ${isDark ? "hover:bg-white/5 text-neutral-300" : "hover:bg-black/5 text-neutral-700"}`}>
-                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                    <circle cx="9" cy="7" r="4"/>
-                    <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-                    <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-                  </svg>
-                  Founders
-                </a>
+                <div className={`px-3 py-2.5 text-[11px] truncate ${isDark ? "text-neutral-500 border-b border-white/5" : "text-neutral-500 border-b border-black/5"}`}>{userEmail}</div>
                 <a href="/profile" className={`w-full text-left px-3 py-2.5 text-[13px] flex items-center gap-2 ${isDark ? "hover:bg-white/5 text-neutral-300" : "hover:bg-black/5 text-neutral-700"}`}>
                   <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
@@ -323,9 +449,7 @@ export default function Home() {
                 <button onClick={() => setTheme(isDark ? "light" : "dark")} className={`w-full text-left px-3 py-2.5 text-[13px] flex items-center gap-2 ${isDark ? "hover:bg-white/5 text-neutral-300" : "hover:bg-black/5 text-neutral-700"}`}>
                   {isDark ? "Light mode" : "Dark mode"}
                 </button>
-                <button onClick={signOut} className={`w-full text-left px-3 py-2.5 text-[13px] flex items-center gap-2 ${isDark ? "hover:bg-white/5 text-red-400" : "hover:bg-black/5 text-red-600"}`}>
-                  Sign out
-                </button>
+                <button onClick={signOut} className={`w-full text-left px-3 py-2.5 text-[13px] flex items-center gap-2 ${isDark ? "hover:bg-white/5 text-red-400" : "hover:bg-black/5 text-red-600"}`}>Sign out</button>
               </div>
             )}
 
@@ -333,9 +457,7 @@ export default function Home() {
               {userAvatar ? (
                 <img src={userAvatar} alt={userName} className="w-7 h-7 rounded-full flex-shrink-0" />
               ) : (
-                <div className="w-7 h-7 rounded-full flex-shrink-0 bg-gradient-to-br from-blue-500 via-purple-500 to-pink-400 flex items-center justify-center text-white text-[12px] font-semibold">
-                  {userInitial}
-                </div>
+                <div className="w-7 h-7 rounded-full flex-shrink-0 bg-gradient-to-br from-blue-500 via-purple-500 to-pink-400 flex items-center justify-center text-white text-[12px] font-semibold">{userInitial}</div>
               )}
               <span className={`flex-1 text-left text-[13px] font-medium truncate ${isDark ? "text-neutral-200" : "text-neutral-800"}`}>{userName}</span>
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={isDark ? "text-neutral-500" : "text-neutral-400"}><polyline points="6 9 12 15 18 9"/></svg>
