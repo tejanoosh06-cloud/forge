@@ -83,15 +83,15 @@ export default function ProfileSetupPage() {
         <form onSubmit={handleSubmit} className="space-y-6">
           <div>
             <label className="block text-[13px] font-medium text-neutral-300 mb-2">Your name</label>
-            <input type="text" value={form.full_name} onChange={(e) => update("full_name", e.target.value)} placeholder="Tejanoosh" className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg outline-none focus:border-purple-400/50 transition-colors text-[15px]" required />
+            <input type="text" value={form.full_name} onChange={(e) => update("full_name", e.target.value)} placeholder="Your full name" className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg outline-none focus:border-purple-400/50 transition-colors text-[15px]" required />
           </div>
           <div>
             <label className="block text-[13px] font-medium text-neutral-300 mb-2">Company / Product name</label>
-            <input type="text" value={form.company_name} onChange={(e) => update("company_name", e.target.value)} placeholder="Forge" className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg outline-none focus:border-purple-400/50 transition-colors text-[15px]" />
+            <input type="text" value={form.company_name} onChange={(e) => update("company_name", e.target.value)} placeholder="e.g. Acme Inc." className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg outline-none focus:border-purple-400/50 transition-colors text-[15px]" />
           </div>
           <div>
             <label className="block text-[13px] font-medium text-neutral-300 mb-2">What are you building?</label>
-            <textarea value={form.what_building} onChange={(e) => update("what_building", e.target.value)} placeholder="AI co-founder for Indian founders." rows={3} className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg outline-none focus:border-purple-400/50 transition-colors text-[15px] resize-none" />
+            <textarea value={form.what_building} onChange={(e) => update("what_building", e.target.value)} placeholder="A 1-2 line description of what you are building..." rows={3} className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg outline-none focus:border-purple-400/50 transition-colors text-[15px] resize-none" />
           </div>
           <div>
             <label className="block text-[13px] font-medium text-neutral-300 mb-2">Sector</label>
@@ -109,7 +109,7 @@ export default function ProfileSetupPage() {
           </div>
           <div>
             <label className="block text-[13px] font-medium text-neutral-300 mb-2">City</label>
-            <input type="text" value={form.city} onChange={(e) => update("city", e.target.value)} placeholder="Hyderabad" className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg outline-none focus:border-purple-400/50 transition-colors text-[15px]" />
+            <input type="text" value={form.city} onChange={(e) => update("city", e.target.value)} placeholder="e.g. Bengaluru, Mumbai, Delhi..." className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-lg outline-none focus:border-purple-400/50 transition-colors text-[15px]" />
           </div>
           <div className="pt-4 pb-2">
             <label className="flex items-start gap-3 cursor-pointer group">
