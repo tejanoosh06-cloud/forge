@@ -9,7 +9,30 @@ export async function POST(request) {
     const { data: { user } } = await supabase.auth.getUser();
     let founderContext = "";
 
-    if (user) {
+    // Detect if the latest user message looks startup/business-related
+    function isStartupQuery(text) {
+      if (!text) return false;
+      const q = text.toLowerCase();
+      const startupKeywords = [
+        "startup","founder","company","business","revenue","customer","user","product","market","launch","mvp",
+        "pitch","investor","vc","angel","raise","seed","series","funding","valuation","term sheet","safe","esop",
+        "gst","tax","compliance","incorporation","registration","roc","mca","dpiit","fema","fdi","msme","8oiac",
+        "hire","hiring","employee","cofounder","co-founder","team","salary","equity","stake","share","stock",
+        "growth","gtm","go to market","marketing","sales","pricing","pricing strategy","price","cac","ltv",
+        "saas","d2c","fintech","edtech","agritech","healthtech","b2b","b2c","marketplace","app","platform",
+        "razorpay","cashfree","stripe","upi","payment","onboarding","retention","churn","conversion",
+        "metric","kpi","dashboard","analytics","data","feature","roadmap","strategy","plan","build","ship",
+        "competition","competitor","moat","positioning","brand","pmf","traction","mrr","arr","burn","runway",
+        "advice","help me","how do i","should i","my company","my business","my product","my startup","my idea","i am building","i'm building",
+        "indian","india","bharat","mumbai","bangalore","bengaluru","hyderabad","delhi","chennai","pune","kolkata"
+      ];
+      return startupKeywords.some(kw => q.includes(kw));
+    }
+
+    const lastUserMsg = messages && messages.length > 0 ? messages[messages.length - 1].content : "";
+    const shouldInjectContext = isStartupQuery(lastUserMsg);
+
+    if (user && shouldInjectContext) {
       const { data: profile } = await supabase
         .from("profiles")
         .select("full_name, company_name, sector, stage, city, what_building")
@@ -25,7 +48,7 @@ export async function POST(request) {
         if (profile.stage) parts.push("Stage: " + profile.stage);
         if (profile.city) parts.push("Based in: " + profile.city);
 
-        founderContext = "\n\nFOUNDER CONTEXT (the person you are talking to):\n" + parts.join("\n") + "\n\nUse this context to tailor your answers. Reference their company, sector, stage, and what they are building when relevant. Do NOT ask them to re-state what is already in this context.\n";
+        founderContext = "\n\nFOUNDER CONTEXT (the person you are talking to):\n" + parts.join("\n") + "\n\nUse this context ONLY if directly relevant to their question. For off-topic or general questions, ignore this context entirely. Do NOT force-relate everything back to their startup. Do NOT ask them to re-state what is already in this context.\n";
       }
     }
 
