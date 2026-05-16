@@ -3,6 +3,7 @@
 import { useState, useRef, useEffect } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import { createClient } from "@/lib/supabase/client";
 
 const LOADING_MESSAGE_BANKS = {
   fundraising: ["Consulting Indian VC playbooks...", "Pulling up recent funding data...", "Thinking like a Peak XV partner...", "Reviewing angel networks..."],
@@ -39,8 +40,24 @@ export default function Home() {
   const [chats, setChats] = useState([]);
   const [activeChatId, setActiveChatId] = useState(null);
   const [theme, setTheme] = useState("dark");
+  const [user, setUser] = useState(null);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
   const scrollRef = useRef(null);
   const inputRef = useRef(null);
+  const supabase = createClient();
+
+  useEffect(() => {
+    async function loadUser() {
+      const { data: { user } } = await supabase.auth.getUser();
+      setUser(user);
+    }
+    loadUser();
+  }, []);
+
+  async function signOut() {
+    await supabase.auth.signOut();
+    window.location.href = "/login";
+  }
 
   useEffect(() => {
     const saved = typeof window !== "undefined" ? localStorage.getItem("forge-theme") : null;
@@ -109,7 +126,6 @@ export default function Home() {
         return;
       }
 
-      // Start streaming
       setLoading(false);
       setStreaming(true);
 
@@ -117,7 +133,6 @@ export default function Home() {
       const decoder = new TextDecoder();
       let assistantText = "";
 
-      // Add empty assistant message that we'll fill as text streams in
       setMessages([...newMessages, { role: "assistant", content: "" }]);
 
       while (true) {
@@ -125,8 +140,6 @@ export default function Home() {
         if (done) break;
         const chunk = decoder.decode(value, { stream: true });
         assistantText += chunk;
-
-        // Update the last (assistant) message with current text so far
         setMessages((prev) => {
           const copy = [...prev];
           copy[copy.length - 1] = { role: "assistant", content: assistantText };
@@ -134,7 +147,6 @@ export default function Home() {
         });
       }
 
-      // Persist final messages to chat history
       const finalMessages = [...newMessages, { role: "assistant", content: assistantText }];
       setChats((prev) => prev.map((c) => (c.id === chatId ? { ...c, messages: finalMessages } : c)));
     } catch (err) {
@@ -168,6 +180,11 @@ export default function Home() {
   const isEmpty = messages.length === 0;
   const isDark = theme === "dark";
   const isBusy = loading || streaming;
+
+  const userName = user?.user_metadata?.full_name || user?.user_metadata?.name || user?.email?.split("@")[0] || "Founder";
+  const userEmail = user?.email || "";
+  const userAvatar = user?.user_metadata?.avatar_url || user?.user_metadata?.picture;
+  const userInitial = userName.charAt(0).toUpperCase();
 
   const chatInputBox = (
     <div className="relative w-full">
@@ -242,13 +259,57 @@ export default function Home() {
             )}
           </div>
 
-          <div className={`px-3 py-3 border-t flex items-center justify-end ${isDark ? "border-white/5" : "border-black/5"}`}>
-            <button onClick={() => setTheme(isDark ? "light" : "dark")} className={`p-1.5 rounded-md transition-colors ${isDark ? "hover:bg-white/5 text-neutral-400 hover:text-neutral-100" : "hover:bg-black/5 text-neutral-500 hover:text-neutral-900"}`} aria-label="Toggle theme">
-              {isDark ? (
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+          {/* USER PROFILE FOOTER */}
+          <div className={`relative px-3 py-3 border-t ${isDark ? "border-white/5" : "border-black/5"}`}>
+            {userMenuOpen && (
+              <div
+                className={`absolute bottom-full left-3 right-3 mb-2 rounded-lg overflow-hidden shadow-2xl ${
+                  isDark ? "bg-neutral-900 border border-white/10" : "bg-white border border-black/10"
+                }`}
+              >
+                <div className={`px-3 py-2.5 text-[11px] truncate ${isDark ? "text-neutral-500 border-b border-white/5" : "text-neutral-500 border-b border-black/5"}`}>
+                  {userEmail}
+                </div>
+                <button
+                  onClick={() => setTheme(isDark ? "light" : "dark")}
+                  className={`w-full text-left px-3 py-2.5 text-[13px] flex items-center gap-2 ${isDark ? "hover:bg-white/5 text-neutral-300" : "hover:bg-black/5 text-neutral-700"}`}
+                >
+                  {isDark ? (
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.93 4.93l1.41 1.41M17.66 17.66l1.41 1.41M2 12h2M20 12h2M4.93 19.07l1.41-1.41M17.66 6.34l1.41-1.41"/></svg>
+                  ) : (
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                  )}
+                  {isDark ? "Light mode" : "Dark mode"}
+                </button>
+                <button
+                  onClick={signOut}
+                  className={`w-full text-left px-3 py-2.5 text-[13px] flex items-center gap-2 ${isDark ? "hover:bg-white/5 text-red-400" : "hover:bg-black/5 text-red-600"}`}
+                >
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/>
+                  </svg>
+                  Sign out
+                </button>
+              </div>
+            )}
+
+            <button
+              onClick={() => setUserMenuOpen(!userMenuOpen)}
+              className={`w-full flex items-center gap-2.5 px-2 py-2 rounded-lg transition-colors ${isDark ? "hover:bg-white/5" : "hover:bg-black/5"}`}
+            >
+              {userAvatar ? (
+                <img src={userAvatar} alt={userName} className="w-7 h-7 rounded-full flex-shrink-0" />
               ) : (
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+                <div className="w-7 h-7 rounded-full flex-shrink-0 bg-gradient-to-br from-blue-500 via-purple-500 to-pink-400 flex items-center justify-center text-white text-[12px] font-semibold">
+                  {userInitial}
+                </div>
               )}
+              <span className={`flex-1 text-left text-[13px] font-medium truncate ${isDark ? "text-neutral-200" : "text-neutral-800"}`}>
+                {userName}
+              </span>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={isDark ? "text-neutral-500" : "text-neutral-400"}>
+                <polyline points="6 9 12 15 18 9"/>
+              </svg>
             </button>
           </div>
         </div>
@@ -265,7 +326,9 @@ export default function Home() {
           <div className="flex-1 flex flex-col items-center justify-center px-6">
             <div className="w-full max-w-2xl flex flex-col items-center">
               <h1 className="text-4xl md:text-5xl font-semibold mb-4 tracking-tight text-center">
-                <span className="bg-gradient-to-r from-blue-400 via-purple-400 to-pink-300 bg-clip-text text-transparent">What are you building?</span>
+                <span className="bg-gradient-to-r from-blue-400 via-purple-400 to-pink-300 bg-clip-text text-transparent">
+                  {user ? `Welcome back, ${userName.split(" ")[0]}` : "What are you building?"}
+                </span>
               </h1>
               <p className={`max-w-md leading-relaxed text-[15px] text-center mb-10 ${isDark ? "text-neutral-500" : "text-neutral-500"}`}>Your AI co-founder for India.</p>
               {chatInputBox}
@@ -288,7 +351,7 @@ export default function Home() {
                           </div>
                         ) : (
                           <div className={`max-w-[85%] text-[15px] markdown-body ${isDark ? "text-neutral-200" : "text-neutral-800"}`}>
-                            <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content || (showCursor ? "" : "")}</ReactMarkdown>
+                            <ReactMarkdown remarkPlugins={[remarkGfm]}>{msg.content}</ReactMarkdown>
                             {showCursor && (
                               <span className="inline-block w-[2px] h-4 ml-0.5 align-middle bg-gradient-to-b from-blue-400 to-purple-500 animate-pulse" />
                             )}
