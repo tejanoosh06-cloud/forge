@@ -53,6 +53,8 @@ export default function Home() {
   const [attachedFile, setAttachedFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState("");
+  const [proPlusAvailable, setProPlusAvailable] = useState(true);
+  const [proPlusArmed, setProPlusArmed] = useState(false);
   const scrollRef = useRef(null);
   const inputRef = useRef(null);
   const fileInputRef = useRef(null);
@@ -67,10 +69,19 @@ export default function Home() {
         const res = await fetch("/api/chats");
         const data = await res.json();
         setChats(data.chats || []);
+        checkProPlusAvailability();
       }
     }
     init();
   }, []);
+
+  async function checkProPlusAvailability() {
+    try {
+      const res = await fetch("/api/proplus");
+      const data = await res.json();
+      setProPlusAvailable(data.available);
+    } catch {}
+  }
 
   async function signOut() {
     await supabase.auth.signOut();
@@ -225,12 +236,28 @@ export default function Home() {
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ messages: newMessagesForAI }),
+        body: JSON.stringify({ messages: newMessagesForAI, pro_plus_requested: proPlusArmed }),
         signal: abortControllerRef.current.signal,
       });
 
       if (!res.ok || !res.body) {
-        setMessages([...newMessagesForUI, { role: "assistant", content: "Something went wrong. Try again?" }]);
+        // Handle rate limit responses specifically
+        if (res.status === 429) {
+          try {
+            const data = await res.json();
+            setMessages([...newMessagesForUI, { role: "assistant", content: data.message || "Rate limit reached. Try again later." }]);
+          } catch {
+            setMessages([...newMessagesForUI, { role: "assistant", content: "Rate limit reached. Try again later." }]);
+          }
+        } else {
+          // Try to read backend's helpful message for any error status
+          try {
+            const data = await res.json();
+            setMessages([...newMessagesForUI, { role: "assistant", content: data.message || "Something went wrong. Try again?" }]);
+          } catch {
+            setMessages([...newMessagesForUI, { role: "assistant", content: "Something went wrong. Try again?" }]);
+          }
+        }
         setLoading(false);
         return;
       }
@@ -273,6 +300,11 @@ export default function Home() {
     } finally {
       setLoading(false);
       setStreaming(false);
+      // If Pro+ was used, refresh availability + disarm
+      if (proPlusArmed) {
+        setProPlusArmed(false);
+        checkProPlusAvailability();
+      }
       setTimeout(() => inputRef.current?.focus(), 50);
     }
   }
@@ -322,6 +354,38 @@ export default function Home() {
   const chatInputBox = (
     <div className="relative w-full">
       <div className="absolute -inset-6 bg-gradient-to-r from-blue-400/10 via-purple-400/10 to-pink-300/10 blur-3xl opacity-50 rounded-full pointer-events-none"></div>
+
+      {/* Pro+ toggle button */}
+      {user && (
+        <div className="relative mb-2 flex items-center justify-end">
+          {proPlusAvailable ? (
+            <button
+              onClick={() => setProPlusArmed(!proPlusArmed)}
+              disabled={loading || streaming}
+              className={`group flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] font-medium transition-all ${
+                proPlusArmed
+                  ? "bg-gradient-to-r from-blue-500 via-purple-500 to-pink-400 text-white shadow-lg shadow-purple-500/30"
+                  : isDark
+                    ? "bg-white/5 hover:bg-white/10 text-neutral-400 hover:text-neutral-100 border border-white/10"
+                    : "bg-black/5 hover:bg-black/10 text-neutral-600 hover:text-neutral-900 border border-black/10"
+              }`}
+              title="Use today's Pro+ answer — gives a more thoughtful, in-depth response"
+            >
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2l2.4 7.2H22l-6.2 4.5 2.4 7.3L12 16.5l-6.2 4.5 2.4-7.3L2 9.2h7.6L12 2z"/>
+              </svg>
+              {proPlusArmed ? "Pro+ armed — next answer will be premium" : "Use Pro+ answer (1 left today)"}
+            </button>
+          ) : (
+            <span className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[11px] ${isDark ? "text-neutral-600 bg-white/[0.02] border border-white/5" : "text-neutral-400 bg-black/[0.02] border border-black/5"}`}>
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M12 2l2.4 7.2H22l-6.2 4.5 2.4 7.3L12 16.5l-6.2 4.5 2.4-7.3L2 9.2h7.6L12 2z"/>
+              </svg>
+              Pro+ used today — resets at midnight
+            </span>
+          )}
+        </div>
+      )}
 
       {/* Attached file preview */}
       {attachedFile && (

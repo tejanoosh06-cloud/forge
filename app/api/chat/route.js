@@ -310,6 +310,48 @@ When they earned real recognition, give it — but only when earned.
 
 Be the co-founder they wish they had.`;
 
+// ===== PRO+ ENHANCEMENT — appended for Pro+ quality requests =====
+const FORGE_PRO_PLUS_ENHANCEMENT = `
+
+# PRO+ MODE ACTIVATED (premium response — make it count)
+
+This is a premium answer. The user explicitly chose to use their daily Pro+ credit on THIS question. Make it dramatically more thoughtful than a standard answer.
+
+## Deeper Analysis
+- Consider 2-3 different angles before committing to your view
+- Surface edge cases the user did not mention
+- Question your own first instinct, then commit to the best one
+
+## Polished Voice
+- Use varied sentence rhythm — mix short punches with longer texture
+- Lead with the single sharpest insight
+- Use specific numbers and concrete references (not vague qualifiers)
+- Bold ONLY 1-2 truly critical phrases per response
+
+## Calibrated Confidence
+- High confidence facts: state directly
+- Medium confidence: "My read is..." or "I think..."
+- Low confidence: "Worth verifying with a CA, but..."
+- Always separate verified facts from your opinion
+
+## Match Their Energy
+- Tired founder: empathy first, then direction
+- Excited founder: channel into action
+- Stuck founder: break the problem into one tiny next move
+- Skeptical founder: grounded reasoning, no hype
+
+## Length Discipline
+- Length should match question complexity, not "show off"
+- If the right answer is 3 sentences, give 3 sentences
+- If it needs depth, go deep — but every paragraph must earn its place
+- Premium ≠ longer. Premium = sharper.
+
+## End With Resonance
+- Don't end on a generic closing
+- End with a line the founder will remember tomorrow
+- Specific, grounded, action-oriented
+`;
+
 function isStartupQuery(text) {
   if (!text) return false;
   const q = text.toLowerCase();
@@ -348,7 +390,7 @@ function isHeavyAnalysisQuery(text) {
 
 export async function POST(request) {
   try {
-    const { messages } = await request.json();
+    const { messages, pro_plus_requested } = await request.json();
     if (!messages || !Array.isArray(messages)) {
       return NextResponse.json({ error: "Invalid request" }, { status: 400 });
     }
@@ -356,10 +398,87 @@ export async function POST(request) {
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
 
+    // ===== RATE LIMITING =====
+    if (user) {
+      const now = new Date();
+      const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
+      const oneMinuteAgo = new Date(now.getTime() - 60 * 1000).toISOString();
+
+      // Daily cap: 30 messages
+      const { count: todayCount } = await supabase
+        .from("usage_logs")
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", user.id)
+        .eq("action_type", "chat")
+        .gte("created_at", todayStart);
+
+      if (todayCount !== null && todayCount >= 30) {
+        return NextResponse.json({
+          error: "daily_limit",
+          message: "You have used Forge a lot today (30 messages). Your limit resets at midnight. Premium tier with unlimited messages is coming soon."
+        }, { status: 429 });
+      }
+
+      // Per-minute burst cap: 10 messages
+      const { count: minuteCount } = await supabase
+        .from("usage_logs")
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", user.id)
+        .eq("action_type", "chat")
+        .gte("created_at", oneMinuteAgo);
+
+      if (minuteCount !== null && minuteCount >= 10) {
+        return NextResponse.json({
+          error: "burst_limit",
+          message: "Slow down a bit. You can send up to 10 messages per minute."
+        }, { status: 429 });
+      }
+
+      // Log this usage (fire-and-forget so we don't slow the response)
+      supabase
+        .from("usage_logs")
+        .insert({ user_id: user.id, action_type: "chat" })
+        .then(() => {});
+    }
+    // ===== END RATE LIMITING =====
+
     const lastUserMsg = messages.length > 0 ? messages[messages.length - 1].content : "";
     const useFullPrompt = isStartupQuery(lastUserMsg);
 
+    // ===== PRO+ TIER CHECK =====
+    let useProPlus = false;
+    if (pro_plus_requested && user) {
+      const now = new Date();
+      const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
+
+      // Check if user already used their daily Pro+ credit
+      const { count: proPlusToday } = await supabase
+        .from("usage_logs")
+        .select("*", { count: "exact", head: true })
+        .eq("user_id", user.id)
+        .eq("action_type", "pro_plus_answer")
+        .gte("created_at", todayStart);
+
+      if (proPlusToday !== null && proPlusToday >= 1) {
+        return NextResponse.json({
+          error: "pro_plus_used",
+          message: "You have already used today's Pro+ answer. Resets at midnight. Get unlimited Pro+ with the upcoming premium tier."
+        }, { status: 429 });
+      }
+
+      useProPlus = true;
+      // Log the Pro+ usage now (so concurrent requests don't double-spend)
+      supabase
+        .from("usage_logs")
+        .insert({ user_id: user.id, action_type: "pro_plus_answer" })
+        .then(() => {});
+    }
+    // ===== END PRO+ TIER CHECK =====
+
     let basePrompt = useFullPrompt ? FORGE_FULL_PROMPT : FORGE_LITE_PROMPT;
+    if (useProPlus && useFullPrompt) {
+      basePrompt += FORGE_PRO_PLUS_ENHANCEMENT;
+    }
     let founderContext = "";
 
     if (user && useFullPrompt) {
@@ -399,9 +518,36 @@ export async function POST(request) {
 
     const systemPrompt = basePrompt + founderContext;
 
+    // Filter out our own error/fallback messages so they don't pollute Sarvam history
+    const errorPhrases = [
+      "Something went wrong",
+      "AI service had an issue",
+      "AI service unavailable",
+      "Rate limit reached",
+      "Network issue",
+      "Sorry, your message hit a length limit",
+      "Sorry, I got stuck thinking",
+      "Pro+ used today",
+      "You have already used today's Pro+",
+      "You have used Forge a lot today",
+      "Slow down a bit"
+    ];
+    const cleanMessages = messages.filter(m => {
+      if (m.role !== "assistant") return true;
+      return !errorPhrases.some(phrase => (m.content || "").includes(phrase));
+    });
+
+    // Truncate to last 10 messages to fit Sarvam Starter input limit
+    const recentMessages = cleanMessages.slice(-10);
+
+    // Ensure the conversation starts with a user message (Sarvam requirement)
+    while (recentMessages.length > 0 && recentMessages[0].role !== "user") {
+      recentMessages.shift();
+    }
+
     const sarvamMessages = [
       { role: "system", content: systemPrompt },
-      ...messages.map(m => ({ role: m.role, content: m.content })),
+      ...recentMessages.map(m => ({ role: m.role, content: m.content })),
     ];
 
     const sarvamRes = await fetch("https://api.sarvam.ai/v1/chat/completions", {
@@ -414,16 +560,30 @@ export async function POST(request) {
         model: "sarvam-m",
         messages: sarvamMessages,
         stream: false,
-        temperature: 0.7,
-        max_tokens: isHeavyAnalysisQuery(lastUserMsg) ? 3500 : (useFullPrompt ? 2000 : 1000),
-        reasoning_effort: isHeavyAnalysisQuery(lastUserMsg) ? "medium" : "low",
+        max_tokens: useProPlus ? 2000 : (isHeavyAnalysisQuery(lastUserMsg) ? 2000 : (useFullPrompt ? 1800 : 1000)),
+        reasoning_effort: useProPlus ? "medium" : (isHeavyAnalysisQuery(lastUserMsg) ? "medium" : "low"),
+        temperature: useProPlus ? 0.6 : 0.7,
       }),
     });
 
     if (!sarvamRes.ok) {
       const errText = await sarvamRes.text();
       console.error("Sarvam error:", errText);
-      return NextResponse.json({ error: "AI service unavailable" }, { status: 500 });
+
+      // Try to extract a useful error message from Sarvam's response
+      let userMessage = "AI service had an issue. Please try again.";
+      try {
+        const errJson = JSON.parse(errText);
+        if (errJson?.error?.message) {
+          if (errJson.error.message.includes("max_tokens")) {
+            userMessage = "Sorry, your message hit a length limit. Try a shorter question.";
+          } else if (errJson.error.message.includes("rate")) {
+            userMessage = "AI service is busy right now. Try again in a moment.";
+          }
+        }
+      } catch {}
+
+      return NextResponse.json({ error: "ai_error", message: userMessage }, { status: 500 });
     }
 
     const sarvamData = await sarvamRes.json();
