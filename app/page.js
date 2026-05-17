@@ -56,6 +56,7 @@ export default function Home() {
   const scrollRef = useRef(null);
   const inputRef = useRef(null);
   const fileInputRef = useRef(null);
+  const abortControllerRef = useRef(null);
   const supabase = createClient();
 
   useEffect(() => {
@@ -161,6 +162,15 @@ export default function Home() {
     setUploadError("");
   }
 
+  function stopGenerating() {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+      abortControllerRef.current = null;
+    }
+    setLoading(false);
+    setStreaming(false);
+  }
+
   async function sendMessage(text) {
     const messageText = (text || input).trim();
     if ((!messageText && !attachedFile) || loading || streaming || uploading) return;
@@ -208,11 +218,15 @@ export default function Home() {
       });
     }
 
+    // Create a new AbortController for this request
+    abortControllerRef.current = new AbortController();
+
     try {
       const res = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ messages: newMessagesForAI }),
+        signal: abortControllerRef.current.signal,
       });
 
       if (!res.ok || !res.body) {
@@ -251,7 +265,11 @@ export default function Home() {
         refreshChatList();
       }
     } catch (err) {
-      setMessages([...newMessagesForUI, { role: "assistant", content: "Network issue. Check your connection?" }]);
+      if (err.name === "AbortError") {
+        // User clicked stop — don't show an error, just keep the partial response
+      } else {
+        setMessages([...newMessagesForUI, { role: "assistant", content: "Network issue. Check your connection?" }]);
+      }
     } finally {
       setLoading(false);
       setStreaming(false);
@@ -260,6 +278,15 @@ export default function Home() {
   }
 
   function newChat() {
+    // Generate a memory from the chat we're leaving (background, fire-and-forget)
+    if (activeChatId && messages.length >= 4) {
+      fetch("/api/memory", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ chat_id: activeChatId }),
+      }).catch(() => {}); // Silent fail - memory generation is non-critical
+    }
+
     setMessages([]);
     setActiveChatId(null);
     setInput("");
@@ -373,16 +400,28 @@ export default function Home() {
             disabled={isBusy}
           />
 
-          <button
-            onClick={() => sendMessage()}
-            disabled={(!input.trim() && !attachedFile) || isBusy}
-            className={`m-2 w-9 h-9 rounded-lg flex items-center justify-center transition-all flex-shrink-0 ${(input.trim() || attachedFile) && !isBusy ? "bg-gradient-to-br from-blue-500 via-purple-500 to-pink-400 hover:opacity-90 text-white shadow-lg shadow-purple-500/20" : isDark ? "bg-white/5 text-neutral-600 cursor-not-allowed" : "bg-black/5 text-neutral-400 cursor-not-allowed"}`}
-            aria-label="Send"
-          >
-            <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
-              <path d="M8 14V2M8 2L3 7M8 2L13 7" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
-            </svg>
-          </button>
+          {(loading || streaming) ? (
+            <button
+              onClick={stopGenerating}
+              className="m-2 w-9 h-9 rounded-lg flex items-center justify-center transition-all flex-shrink-0 bg-gradient-to-br from-blue-500 via-purple-500 to-pink-400 hover:opacity-90 text-white shadow-lg shadow-purple-500/20"
+              aria-label="Stop generating"
+            >
+              <svg width="12" height="12" viewBox="0 0 16 16" fill="currentColor">
+                <rect x="3" y="3" width="10" height="10" rx="1.5"/>
+              </svg>
+            </button>
+          ) : (
+            <button
+              onClick={() => sendMessage()}
+              disabled={(!input.trim() && !attachedFile) || uploading}
+              className={`m-2 w-9 h-9 rounded-lg flex items-center justify-center transition-all flex-shrink-0 ${(input.trim() || attachedFile) && !uploading ? "bg-gradient-to-br from-blue-500 via-purple-500 to-pink-400 hover:opacity-90 text-white shadow-lg shadow-purple-500/20" : isDark ? "bg-white/5 text-neutral-600 cursor-not-allowed" : "bg-black/5 text-neutral-400 cursor-not-allowed"}`}
+              aria-label="Send"
+            >
+              <svg width="14" height="14" viewBox="0 0 16 16" fill="none">
+                <path d="M8 14V2M8 2L3 7M8 2L13 7" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+              </svg>
+            </button>
+          )}
         </div>
       </div>
     </div>

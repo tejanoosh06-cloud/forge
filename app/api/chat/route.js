@@ -327,9 +327,23 @@ function isStartupQuery(text) {
     "indian","india","bharat","mumbai","bangalore","bengaluru","hyderabad","delhi","chennai","pune","kolkata",
     "validate","validation","prototype","manufacturing","supplier","factory","cad","design","logo","website",
     "instagram","whatsapp","reels","content","influencer","reach","followers",
-    "regulation","license","fssai","cdsco","rbi","sebi","dpdp"
+    "regulation","license","fssai","cdsco","rbi","sebi","dpdp",
+    "last time","previously","remember","earlier","before","we discussed","we talked","where did we","what did we","yesterday","my idea","my project"
   ];
   return startupKeywords.some(kw => q.includes(kw));
+}
+
+function isHeavyAnalysisQuery(text) {
+  if (!text || text.length < 200) return false;
+  const q = text.toLowerCase();
+  const heavyKeywords = [
+    "roadmap","plan","analyze","analyse","analysis","strategy","compare","comparison",
+    "pros and cons","walk me through","step by step","step-by-step","business plan",
+    "review my","should i invest","detailed breakdown","deep dive","comprehensive",
+    "in depth","in-depth","full analysis","complete plan","entire","full review",
+    "12 month","12-month","6 month","6-month","quarterly","yearly plan"
+  ];
+  return heavyKeywords.some(kw => q.includes(kw));
 }
 
 export async function POST(request) {
@@ -368,6 +382,21 @@ export async function POST(request) {
       }
     }
 
+    // Load memories for ANY logged-in user (not gated by useFullPrompt)
+    if (user) {
+      const { data: memories } = await supabase
+        .from("user_memories")
+        .select("memory_text, created_at")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+        .limit(5);
+
+      if (memories && memories.length > 0) {
+        const memoryLines = memories.map((m, i) => `${i + 1}. ${m.memory_text}`).join("\n");
+        founderContext += "\n\n# WHAT YOU REMEMBER FROM PAST CONVERSATIONS WITH THIS FOUNDER:\n" + memoryLines + "\n\nUse these memories to give continuity. If the user references something from before or asks about past discussions, use these memories to respond naturally. Do NOT explicitly say 'I remember' or 'from your past chats' \u2014 just behave like a co-founder who naturally remembers what was discussed.\n";
+      }
+    }
+
     const systemPrompt = basePrompt + founderContext;
 
     const sarvamMessages = [
@@ -386,7 +415,8 @@ export async function POST(request) {
         messages: sarvamMessages,
         stream: false,
         temperature: 0.7,
-        max_tokens: 2000,
+        max_tokens: isHeavyAnalysisQuery(lastUserMsg) ? 3500 : (useFullPrompt ? 2000 : 1000),
+        reasoning_effort: isHeavyAnalysisQuery(lastUserMsg) ? "medium" : "low",
       }),
     });
 
@@ -399,11 +429,30 @@ export async function POST(request) {
     const sarvamData = await sarvamRes.json();
     let assistantText = sarvamData?.choices?.[0]?.message?.content || "";
 
+    // Robust <think> stripping — covers all leak patterns
+    // 1. Standard closed think blocks
+    assistantText = assistantText.replace(/<think>[\s\S]*?<\/think>/g, "");
+    // 2. Unclosed think at start (we ran out of tokens during reasoning)
+    if (assistantText.trim().startsWith("<think>")) {
+      assistantText = "";
+    }
+    // 3. Reasoning prose that leaked without tags — detect common starters
+    const reasoningStarters = /^(Wait,|Okay,|Hmm,|Let me think|First, let me|The user is asking|The assistant should|I need to|I should consider|Looking at the user)/i;
+    if (reasoningStarters.test(assistantText.trim())) {
+      // The whole response is leaked reasoning — strip everything before the first real answer marker
+      // Real answers usually have a sentence-ending period followed by a new paragraph or a heading
+      const match = assistantText.match(/\n\n(?=[A-Z]|\*|#|-)/);
+      if (match) {
+        assistantText = assistantText.slice(match.index + 2);
+      } else {
+        // Couldn't find a clean break - it's all reasoning, return a fallback
+        assistantText = "Sorry, I got stuck thinking. Could you ask again?";
+      }
+    }
+    // 4. Stray tags or fragments
     assistantText = assistantText
-      .replace(/<think>[\s\S]*?<\/think>/g, "")
-      .replace(/<think>[\s\S]*?(?=\n\n[A-Z])/g, "")
-      .replace(/<think>[\s\S]*$/g, "")
       .replace(/<\/?think>/g, "")
+      .replace(/<\/?\w*$/g, "") // dangling open tag at end (e.g. "</")
       .trim();
 
     const words = assistantText.split(/(\s+)/);
