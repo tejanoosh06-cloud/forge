@@ -22,7 +22,7 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-black text-neutral-100 px-6">
+    <div className="relative flex flex-col items-center justify-center min-h-screen bg-black text-neutral-100 px-6">
       <div className="w-full max-w-md flex flex-col items-center text-center">
         <h1 className="text-4xl md:text-5xl font-semibold mb-3 tracking-tight">
           <span className="bg-gradient-to-r from-blue-400 via-purple-400 to-pink-300 bg-clip-text text-transparent">
@@ -69,6 +69,11 @@ export default function LoginPage() {
           animation: forgeGradient 8s ease infinite;
         }
       `}</style>
+
+      <div className="absolute bottom-6 left-0 right-0 text-center text-[12px]">
+        <a href="/privacy" className="text-neutral-400 hover:text-neutral-200 transition-colors mr-5 underline-offset-4 hover:underline">Privacy Policy</a>
+        <a href="/terms" className="text-neutral-400 hover:text-neutral-200 transition-colors underline-offset-4 hover:underline">Terms of Service</a>
+      </div>
     </div>
   );
 }

@@ -483,7 +483,9 @@ export default function Home() {
               </h1>
               <p className={`max-w-md leading-relaxed text-[15px] text-center mb-10 ${isDark ? "text-neutral-500" : "text-neutral-500"}`}>Your AI co-founder for India.</p>
               {chatInputBox}
-              <p className={`text-[11px] text-center mt-3 ${isDark ? "text-neutral-700" : "text-neutral-400"}`}>Forge can make mistakes. Verify important info.</p>
+              <p className={`text-[11px] text-center mt-3 ${isDark ? "text-neutral-600" : "text-neutral-500"}`}>
+                Forge can make mistakes. Verify important info. By chatting with Forge, you agree to our <a href="/terms" className={`underline underline-offset-2 transition-colors ${isDark ? "hover:text-neutral-300" : "hover:text-neutral-800"}`}>Terms</a> and have read our <a href="/privacy" className={`underline underline-offset-2 transition-colors ${isDark ? "hover:text-neutral-300" : "hover:text-neutral-800"}`}>Privacy Policy</a>.
+              </p>
             </div>
           </div>
         ) : (
@@ -530,7 +532,9 @@ export default function Home() {
             <div className="relative px-4 pb-6 pt-4">
               <div className="max-w-3xl mx-auto">
                 {chatInputBox}
-                <p className={`text-[11px] text-center mt-3 ${isDark ? "text-neutral-700" : "text-neutral-400"}`}>Forge can make mistakes. Verify important info.</p>
+                <p className={`text-[11px] text-center mt-3 ${isDark ? "text-neutral-600" : "text-neutral-500"}`}>
+                Forge can make mistakes. Verify important info. By chatting with Forge, you agree to our <a href="/terms" className={`underline underline-offset-2 transition-colors ${isDark ? "hover:text-neutral-300" : "hover:text-neutral-800"}`}>Terms</a> and have read our <a href="/privacy" className={`underline underline-offset-2 transition-colors ${isDark ? "hover:text-neutral-300" : "hover:text-neutral-800"}`}>Privacy Policy</a>.
+              </p>
               </div>
             </div>
           </>
