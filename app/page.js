@@ -620,9 +620,29 @@ export default function Home() {
                     <div className="flex justify-start animate-in fade-in duration-300">
                       <div className="flex items-center gap-3 px-1 py-3">
                         <div className="flex items-center gap-1.5">
-                          <div className="w-1.5 h-1.5 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 animate-bounce" style={{ animationDelay: "0ms" }}></div>
-                          <div className="w-1.5 h-1.5 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 animate-bounce" style={{ animationDelay: "150ms" }}></div>
-                          <div className="w-1.5 h-1.5 rounded-full bg-gradient-to-br from-blue-400 to-purple-500 animate-bounce" style={{ animationDelay: "300ms" }}></div>
+                          <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
+                          <div style={{ position: "relative", width: 64, height: 64, display: "flex", alignItems: "center", justifyContent: "center" }}>
+                            {[80, 95, 110].map((size, i) => (
+                              <div key={i} style={{ position: "absolute", width: size, height: size, borderRadius: "50%", border: "1px solid rgba(100,200,255,0.08)", animation: `ringExpand 2.4s ease-out ${i * 0.4}s infinite` }} />
+                            ))}
+                            <div style={{ width: 52, height: 52, borderRadius: "50%", background: "radial-gradient(circle at 30% 28%, rgba(160,220,255,0.9) 0%, transparent 40%), radial-gradient(circle at 50% 50%, #1a6fa8 20%, #071e3d 100%)", boxShadow: "0 0 20px rgba(60,160,255,0.4), 0 0 40px rgba(60,160,255,0.15)", animation: "coreRotate 4s ease-in-out infinite", position: "relative" }}>
+                              <div style={{ position: "absolute", top: 7, left: 9, width: 15, height: 8, borderRadius: "50%", background: "rgba(220,240,255,0.55)", filter: "blur(3px)", animation: "shimmerFloat 3s ease-in-out infinite" }} />
+                            </div>
+                          </div>
+                          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: 3, height: 18 }}>
+                              {[0,0.1,0.2,0.1,0].map((delay, i) => (
+                                <div key={i} style={{ width: 2, borderRadius: 10, background: "rgba(100,200,255,0.5)", animation: `barWave 1.4s ease-in-out ${delay}s infinite` }} />
+                              ))}
+                            </div>
+                            <span style={{ fontSize: 12, color: "rgba(100,200,255,0.7)", letterSpacing: "0.05em", animation: "labelPulse 2.4s infinite" }}>thinking...</span>
+                            <div style={{ display: "flex", alignItems: "center", gap: 3, height: 18 }}>
+                              {[0.2,0.1,0,0.1,0.2].map((delay, i) => (
+                                <div key={i} style={{ width: 2, borderRadius: 10, background: "rgba(100,200,255,0.5)", animation: `barWave 1.4s ease-in-out ${delay}s infinite` }} />
+                              ))}
+                            </div>
+                          </div>
+                        </div>
                         </div>
                         <span key={loadingMessage} className="text-sm bg-gradient-to-r from-blue-400 via-purple-400 to-pink-300 bg-clip-text text-transparent animate-in fade-in duration-500">{loadingMessage}</span>
                       </div>

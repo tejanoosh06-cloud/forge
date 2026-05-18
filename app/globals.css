@@ -28,3 +28,25 @@ body:has(.h-screen) {
   height: 100vh;
   height: 100dvh;
 }
+
+@keyframes ringExpand {
+  0% { transform: scale(0.85); opacity: 0.6; }
+  100% { transform: scale(1.1); opacity: 0; }
+}
+@keyframes coreRotate {
+  0%, 100% { transform: scale(1); }
+  25% { transform: scale(1.04) rotate(5deg); }
+  75% { transform: scale(0.97) rotate(-5deg); }
+}
+@keyframes shimmerFloat {
+  0%, 100% { opacity: 0.55; }
+  50% { opacity: 0.85; transform: translateY(-2px); }
+}
+@keyframes labelPulse {
+  0%, 100% { opacity: 0.6; }
+  50% { opacity: 1; }
+}
+@keyframes barWave {
+  0%, 100% { height: 3px; }
+  50% { height: 16px; }
+}
