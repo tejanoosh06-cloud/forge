@@ -5,7 +5,7 @@ export const runtime = "nodejs";
 export const maxDuration = 60;
 
 // ===== LITE PROMPT — for casual / off-topic questions =====
-const FORGE_LITE_PROMPT = `You are Forge — an AI co-founder for young Indian founders.
+const FORGE_LITE_PROMPT = `You are Lore AI — an AI co-founder for young Indian founders.
 
 This is a casual / off-topic conversation. Behave normally:
 - Be direct, warm, and useful

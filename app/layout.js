@@ -8,7 +8,7 @@ const inter = Inter({
 });
 
 export const metadata = {
-  title: "Forge — AI co-founder for Indian builders",
+  title: "Lore AI — AI co-founder for Indian builders",
   description: "Your AI co-founder for the Indian startup journey.",
 };
 

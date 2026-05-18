@@ -26,7 +26,7 @@ export default function LoginPage() {
       <div className="w-full max-w-md flex flex-col items-center text-center">
         <h1 className="text-4xl md:text-5xl font-semibold mb-3 tracking-tight">
           <span className="bg-gradient-to-r from-blue-400 via-purple-400 to-pink-300 bg-clip-text text-transparent">
-            Welcome to Forge
+            Welcome to Lore AI
           </span>
         </h1>
         <p className="text-neutral-500 mb-12 leading-relaxed text-[15px]">
@@ -53,7 +53,7 @@ export default function LoginPage() {
         </div>
 
         <p className="text-[11px] text-neutral-700 text-center mt-8">
-          By signing in, you agree to keep your conversations with Forge private to you.
+          By signing in, you agree to keep your conversations with Lore AI private to you.
         </p>
       </div>
 
