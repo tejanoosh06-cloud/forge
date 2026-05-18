@@ -53,6 +53,47 @@ export default function Home() {
   const [attachedFile, setAttachedFile] = useState(null);
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState("");
+  const [tasks, setTasks] = useState([]);
+  const [tasksLoading, setTasksLoading] = useState(false);
+  const [showTaskPanel, setShowTaskPanel] = useState(true);
+
+  const loadTasks = async () => {
+    try {
+      const res = await fetch("/api/tasks");
+      const data = await res.json();
+      if (data.tasks) setTasks(data.tasks);
+    } catch {}
+  };
+
+  const toggleTask = async (id, done) => {
+    setTasks(prev => prev.map(t => t.id === id ? {...t, done} : t));
+    await fetch("/api/tasks", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, done }),
+    });
+  };
+
+  const extractTasks = async (message, chatId) => {
+    if (!message || message.length < 60) return;
+    try {
+      const res = await fetch("/api/tasks/extract", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message, chat_id: chatId }),
+      });
+      const data = await res.json();
+      if (data.tasks && data.tasks.length > 0) {
+        await fetch("/api/tasks", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ tasks: data.tasks, source_chat_id: chatId }),
+        });
+        await loadTasks();
+      }
+    } catch {}
+  };
+
   const [proPlusAvailable, setProPlusAvailable] = useState(true);
   const [proPlusArmed, setProPlusArmed] = useState(false);
   const scrollRef = useRef(null);
@@ -70,6 +111,7 @@ export default function Home() {
         const data = await res.json();
         setChats(data.chats || []);
         checkProPlusAvailability();
+        loadTasks();
       }
     }
     init();
@@ -290,6 +332,7 @@ export default function Home() {
           body: JSON.stringify({ chat_id: chatId, role: "assistant", content: assistantText }),
         });
         refreshChatList();
+        extractTasks(assistantText, chatId);
       }
     } catch (err) {
       if (err.name === "AbortError") {
@@ -704,6 +747,96 @@ export default function Home() {
         .light .markdown-body th, .light .markdown-body td { border: 1px solid rgba(0,0,0,0.1); }
         .markdown-body th, .markdown-body td { padding: 0.5rem 0.75rem; text-align: left; }
       `}</style>
+    </div>
+
+      {/* Today's Focus — right panel */}
+      {user && showTaskPanel && (
+        <div className={`hidden lg:flex flex-col w-72 shrink-0 h-screen sticky top-0 border-l overflow-y-auto ${isDark ? "border-neutral-800 bg-neutral-950/80" : "border-neutral-200 bg-white/80"}`} style={{ backdropFilter: "blur(20px)" }}>
+          <div className="p-4">
+            {/* Header */}
+            <div className="flex items-center justify-between mb-4">
+              <div className="flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full bg-orange-500" />
+                <span className={`text-[13px] font-medium ${isDark ? "text-white" : "text-neutral-900"}`}>Today's Focus</span>
+              </div>
+              <button onClick={() => setShowTaskPanel(false)} className={`text-[11px] px-2 py-0.5 rounded-md ${isDark ? "text-neutral-500 hover:text-neutral-300" : "text-neutral-400 hover:text-neutral-600"}`}>hide</button>
+            </div>
+
+            {/* Progress bar */}
+            {tasks.length > 0 && (
+              <div className="mb-4">
+                <div className={`flex justify-between text-[11px] mb-1.5 ${isDark ? "text-neutral-500" : "text-neutral-400"}`}>
+                  <span>{tasks.filter(t => t.done).length} of {tasks.length} done</span>
+                  <span>{Math.round((tasks.filter(t => t.done).length / tasks.length) * 100)}%</span>
+                </div>
+                <div className={`h-1 rounded-full ${isDark ? "bg-neutral-800" : "bg-neutral-200"}`}>
+                  <div
+                    className="h-1 rounded-full bg-gradient-to-r from-orange-500 to-pink-500 transition-all duration-500"
+                    style={{ width: `${Math.round((tasks.filter(t => t.done).length / tasks.length) * 100)}%` }}
+                  />
+                </div>
+              </div>
+            )}
+
+            {/* Task list */}
+            {tasks.length === 0 ? (
+              <div className={`text-center py-8 ${isDark ? "text-neutral-600" : "text-neutral-400"}`}>
+                <div className="text-2xl mb-2">🎯</div>
+                <p className="text-[12px]">Tasks will appear here as you chat</p>
+              </div>
+            ) : (
+              <div className="flex flex-col gap-2">
+                {tasks.map(task => (
+                  <div
+                    key={task.id}
+                    onClick={() => toggleTask(task.id, !task.done)}
+                    className={`flex items-start gap-3 p-3 rounded-xl cursor-pointer transition-all ${isDark ? "bg-white/5 hover:bg-white/8" : "bg-neutral-50 hover:bg-neutral-100"}`}
+                    style={{ backdropFilter: "blur(10px)" }}
+                  >
+                    {/* Checkbox */}
+                    <div className={`w-5 h-5 rounded-full border flex items-center justify-center shrink-0 mt-0.5 transition-all ${task.done ? "bg-green-500 border-green-500" : isDark ? "border-neutral-600" : "border-neutral-300"}`}>
+                      {task.done && (
+                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3">
+                          <polyline points="20 6 9 17 4 12" />
+                        </svg>
+                      )}
+                    </div>
+                    {/* Text */}
+                    <div className="flex-1 min-w-0">
+                      <p className={`text-[13px] leading-tight ${task.done ? "line-through opacity-40" : isDark ? "text-neutral-200" : "text-neutral-800"}`}>
+                        {task.task_text}
+                      </p>
+                      <span className={`inline-block mt-1.5 text-[10px] font-medium px-2 py-0.5 rounded-full ${
+                        task.priority === "high" ? "bg-red-500/15 text-red-400" :
+                        task.priority === "med" ? "bg-orange-500/15 text-orange-400" :
+                        "bg-green-500/15 text-green-400"
+                      }`}>
+                        {task.priority === "high" ? "High" : task.priority === "med" ? "Medium" : "Low"}
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Footer */}
+            <p className={`text-[10px] mt-4 text-center ${isDark ? "text-neutral-700" : "text-neutral-400"}`}>
+              Auto-extracted from your chats
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Show panel button when hidden */}
+      {user && !showTaskPanel && (
+        <button
+          onClick={() => setShowTaskPanel(true)}
+          className={`hidden lg:flex fixed right-4 top-4 z-50 items-center gap-1.5 text-[12px] px-3 py-1.5 rounded-full border transition-all ${isDark ? "bg-neutral-900 border-neutral-700 text-neutral-400 hover:text-white" : "bg-white border-neutral-200 text-neutral-500 hover:text-neutral-900"}`}
+        >
+          <div className="w-1.5 h-1.5 rounded-full bg-orange-500" />
+          Focus
+        </button>
+      )}
     </div>
   );
 }
