@@ -496,7 +496,7 @@ export default function Home() {
       <aside className={`${sidebarOpen ? "w-64" : "w-0"} transition-all duration-300 ease-in-out overflow-hidden flex-shrink-0 ${isDark ? "border-r border-white/5 bg-[#0A0A0A]" : "border-r border-black/5 bg-[#F4F2EC]"}`}>
         <div className="w-64 h-full flex flex-col">
           <div className="px-4 py-4 flex items-center justify-between">
-            <span className="font-semibold tracking-tight text-[15px] bg-gradient-to-r from-blue-400 via-purple-400 to-pink-300 bg-clip-text text-transparent">Lore AI</span>
+            <span className={`font-bold tracking-tight text-[15px] ${isDark ? "text-white" : "text-neutral-900"}`}>Lore AI<span className="text-orange-500">.</span></span>
             <button onClick={() => setSidebarOpen(false)} className={`p-1.5 rounded-md transition-colors ${isDark ? "hover:bg-white/5 text-neutral-500 hover:text-neutral-200" : "hover:bg-black/5 text-neutral-500 hover:text-neutral-800"}`} aria-label="Close sidebar">
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             </button>
