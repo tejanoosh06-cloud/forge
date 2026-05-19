@@ -747,7 +747,6 @@ export default function Home() {
         .light .markdown-body th, .light .markdown-body td { border: 1px solid rgba(0,0,0,0.1); }
         .markdown-body th, .markdown-body td { padding: 0.5rem 0.75rem; text-align: left; }
       `}</style>
-    </div>
 
       {/* Today's Focus — right panel */}
       {user && showTaskPanel && (
