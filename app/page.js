@@ -634,7 +634,7 @@ export default function Home() {
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
               New chat
             </button>
-            <a href="/founders" className={`w-full flex items-center gap-2 px-3 py-2.5 rounded-lg text-[13px] font-medium transition-colors ${isDark ? "hover:bg-white/5 text-neutral-300 hover:text-neutral-100" : "hover:bg-black/5 text-neutral-700 hover:text-neutral-900"}`}>
+            <a href="/founders" className={`w-full flex items-center gap-2 px-3 py-2.5 rounded-lg text-[13px] font-medium transition-colors ${isDark ? "hover:bg-white/5 text-white" : "hover:bg-black/5 text-neutral-900"}`}>
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
                 <circle cx="9" cy="7" r="4"/>
@@ -642,42 +642,45 @@ export default function Home() {
                 <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
               </svg>
               Founders
-
-              {/* Projects Section */}
-              <div className={`px-3 pt-4 pb-1 text-[10px] uppercase tracking-wider font-semibold ${isDark ? "text-neutral-600" : "text-neutral-400"}`}>Projects</div>
-              {projects.map((p) => (
-                <div key={p.id} className="relative group">
-                  <button
-                    onClick={() => { setActiveProjectId(p.id === activeProjectId ? null : p.id); setSidebarOpen(true); }}
-                    className={`w-full text-left px-3 py-2 rounded-lg text-[13px] flex items-center gap-2 transition-colors ${
-                      activeProjectId === p.id
-                        ? isDark ? "bg-white/10 text-white" : "bg-black/10 text-black"
-                        : isDark ? "text-neutral-400 hover:bg-white/5 hover:text-white" : "text-neutral-600 hover:bg-black/5 hover:text-black"
-                    }`}
-                  >
-                    <span>{p.emoji || "📁"}</span>
-                    <span className="truncate flex-1">{p.name}</span>
-                  </button>
-                  {/* kebab menu */}
-                  <button
-                    onClick={() => setProjectMenuOpenId(projectMenuOpenId === p.id ? null : p.id)}
-                    className={`absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 p-1 rounded text-[11px] ${isDark ? "text-neutral-500 hover:text-white" : "text-neutral-400 hover:text-black"}`}
-                  >⋯</button>
-                  {projectMenuOpenId === p.id && (
-                    <div className={`absolute right-2 top-8 z-50 w-32 rounded-lg shadow-lg text-[12px] ${isDark ? "bg-[#1a1a1a] border border-white/10" : "bg-white border border-black/10"}`}>
-                      <button onClick={() => { const n = prompt("Rename project:", p.name); if (n) renameProject(p.id, n); setProjectMenuOpenId(null); }} className={`w-full text-left px-3 py-2 rounded-t-lg ${isDark ? "hover:bg-white/5 text-neutral-300" : "hover:bg-black/5 text-neutral-700"}`}>Rename</button>
-                      <button onClick={() => deleteProject(p.id)} className="w-full text-left px-3 py-2 rounded-b-lg text-red-400 hover:bg-red-500/10">Delete</button>
-                    </div>
-                  )}
-                </div>
-              ))}
-              <button
-                onClick={createProject}
-                className={`w-full text-left px-3 py-2 rounded-lg text-[13px] flex items-center gap-2 transition-colors ${isDark ? "text-neutral-500 hover:bg-white/5 hover:text-neutral-300" : "text-neutral-500 hover:bg-black/5 hover:text-neutral-700"}`}
-              >
-                <span>+</span> New project
-              </button>
             </a>
+
+            {/* === Projects Section === */}
+            <div className="mt-4">
+              <div className={`px-3 pb-1 text-[10px] uppercase tracking-wider font-semibold ${isDark ? "text-neutral-400" : "text-neutral-500"}`}>Projects</div>
+              <div className="space-y-0.5">
+                {projects.map((p) => (
+                  <div key={p.id} className="relative group">
+                    <button
+                      onClick={() => { setActiveProjectId(p.id === activeProjectId ? null : p.id); setSidebarOpen(true); }}
+                      className={`w-full text-left px-3 py-2 rounded-lg text-[13px] flex items-center gap-2 transition-colors ${
+                        activeProjectId === p.id
+                          ? isDark ? "bg-white/10 text-white" : "bg-black/10 text-neutral-900"
+                          : isDark ? "text-neutral-200 hover:bg-white/5 hover:text-white" : "text-neutral-700 hover:bg-black/5 hover:text-neutral-900"
+                      }`}
+                    >
+                      <span className="flex-shrink-0">{p.emoji || "📁"}</span>
+                      <span className="truncate flex-1">{p.name}</span>
+                    </button>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setProjectMenuOpenId(projectMenuOpenId === p.id ? null : p.id); }}
+                      className={`absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 p-1 rounded text-[14px] leading-none ${isDark ? "text-neutral-400 hover:text-white" : "text-neutral-500 hover:text-black"}`}
+                    >⋯</button>
+                    {projectMenuOpenId === p.id && (
+                      <div className={`absolute right-2 top-8 z-50 w-32 rounded-lg shadow-lg overflow-hidden text-[12px] ${isDark ? "bg-[#1a1a1a] border border-white/10" : "bg-white border border-black/10"}`}>
+                        <button onClick={() => { const n = prompt("Rename project:", p.name); if (n) renameProject(p.id, n); setProjectMenuOpenId(null); }} className={`w-full text-left px-3 py-2 ${isDark ? "hover:bg-white/5 text-neutral-200" : "hover:bg-black/5 text-neutral-700"}`}>Rename</button>
+                        <button onClick={() => deleteProject(p.id)} className="w-full text-left px-3 py-2 text-red-400 hover:bg-red-500/10">Delete</button>
+                      </div>
+                    )}
+                  </div>
+                ))}
+                <button
+                  onClick={() => { const n = prompt("New project name:"); if (n) createProject(n); }}
+                  className={`w-full text-left px-3 py-2 rounded-lg text-[13px] flex items-center gap-2 transition-colors ${isDark ? "text-neutral-400 hover:bg-white/5 hover:text-white" : "text-neutral-500 hover:bg-black/5 hover:text-neutral-900"}`}
+                >
+                  <span className="text-base leading-none">+</span> New project
+                </button>
+              </div>
+            </div>
           </div>
 
           <div className="flex-1 overflow-y-auto px-2 pb-4">
@@ -686,10 +689,10 @@ export default function Home() {
               <div className={`px-3 py-2 text-xs ${isDark ? "text-neutral-600" : "text-neutral-400"}`}>No chats yet</div>
             ) : (
               <>
-                <div className={`px-3 py-2 text-[10px] uppercase tracking-wider font-semibold ${isDark ? "text-neutral-600" : "text-neutral-400"}`}>Recent</div>
+                <div className={`px-3 py-2 text-[10px] uppercase tracking-wider font-semibold ${isDark ? "text-neutral-400" : "text-neutral-500"}`}>Recent</div>
                 <div className="space-y-0.5">
                   {chats.filter(c => activeProjectId ? c.project_id === activeProjectId : !c.project_id).map((chat) => (
-                    <button key={chat.id} onClick={() => loadChat(chat)} className={`group w-full text-left px-3 py-2 rounded-lg text-[13px] transition-colors flex items-center justify-between gap-2 ${activeChatId === chat.id ? isDark ? "bg-white/5 text-neutral-100" : "bg-black/5 text-neutral-900" : isDark ? "text-neutral-400 hover:bg-white/[0.03] hover:text-neutral-200" : "text-neutral-600 hover:bg-black/[0.03] hover:text-neutral-900"}`}>
+                    <button key={chat.id} onClick={() => loadChat(chat)} className={`group w-full text-left px-3 py-2 rounded-lg text-[13px] transition-colors flex items-center justify-between gap-2 ${activeChatId === chat.id ? isDark ? "bg-white/10 text-white" : "bg-black/10 text-neutral-900" : isDark ? "text-neutral-200 hover:bg-white/5 hover:text-white" : "text-neutral-700 hover:bg-black/5 hover:text-neutral-900"}`}>
                       <span className="truncate flex-1">{chat.title}</span>
                       <span onClick={(e) => deleteChat(e, chat.id)} className="opacity-0 group-hover:opacity-100 hover:text-red-400 transition-opacity p-0.5">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 01-2 2H9a2 2 0 01-2-2L5 6"/></svg>
