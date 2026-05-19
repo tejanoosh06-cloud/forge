@@ -75,23 +75,35 @@ export default function Home() {
   };
 
   const extractTasks = async (message, chatId) => {
-    if (!message || message.length < 60) return;
+    if (!message || message.length < 60) {
+      console.log("[tasks] message too short, skipping extract");
+      return;
+    }
     try {
+      console.log("[tasks] calling extract for chat", chatId);
       const res = await fetch("/api/tasks/extract", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ message, chat_id: chatId }),
       });
       const data = await res.json();
+      console.log("[tasks] extract result:", data);
       if (data.tasks && data.tasks.length > 0) {
-        await fetch("/api/tasks", {
+        const saveRes = await fetch("/api/tasks", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ tasks: data.tasks, source_chat_id: chatId }),
         });
+        const saveData = await saveRes.json();
+        console.log("[tasks] save result:", saveData);
         await loadTasks();
+        console.log("[tasks] reloaded UI");
+      } else {
+        console.log("[tasks] no tasks extracted, reason:", data.reason);
       }
-    } catch {}
+    } catch (err) {
+      console.error("[tasks] extraction failed:", err);
+    }
   };
 
   const [proPlusAvailable, setProPlusAvailable] = useState(true);
