@@ -58,6 +58,76 @@ export default function Home() {
   const [showTaskPanel, setShowTaskPanel] = useState(false);
   const TASKS_FEATURE_ENABLED = false; // TODO: re-enable when /api/tasks is stable
 
+  // === PROJECTS STATE ===
+  const [projects, setProjects] = useState([]);
+  const [activeProjectId, setActiveProjectId] = useState(null); // null = "All chats"
+  const [projectsExpanded, setProjectsExpanded] = useState(true);
+  const [creatingProject, setCreatingProject] = useState(false);
+  const [newProjectName, setNewProjectName] = useState("");
+  const [projectMenuOpenId, setProjectMenuOpenId] = useState(null);
+
+  const loadProjects = async () => {
+    try {
+      const res = await fetch("/api/projects");
+      const data = await res.json();
+      if (data.projects) setProjects(data.projects);
+    } catch (e) {
+      console.error("[projects] load failed:", e);
+    }
+  };
+
+  const createProject = async (name) => {
+    const trimmed = (name || "").trim();
+    if (!trimmed) return;
+    try {
+      const res = await fetch("/api/projects", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: trimmed, emoji: "📁" }),
+      });
+      const data = await res.json();
+      if (data.project) {
+        setProjects((prev) => [data.project, ...prev]);
+        setActiveProjectId(data.project.id);
+        setNewProjectName("");
+        setCreatingProject(false);
+      }
+    } catch (e) {
+      console.error("[projects] create failed:", e);
+    }
+  };
+
+  const renameProject = async (id, newName) => {
+    const trimmed = (newName || "").trim();
+    if (!trimmed) return;
+    try {
+      await fetch("/api/projects", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, name: trimmed }),
+      });
+      setProjects((prev) => prev.map((p) => (p.id === id ? { ...p, name: trimmed } : p)));
+    } catch (e) {
+      console.error("[projects] rename failed:", e);
+    }
+  };
+
+  const deleteProject = async (id) => {
+    if (!confirm("Delete this project? Chats inside will become standalone (not deleted).")) return;
+    try {
+      await fetch("/api/projects", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id }),
+      });
+      setProjects((prev) => prev.filter((p) => p.id !== id));
+      if (activeProjectId === id) setActiveProjectId(null);
+      setProjectMenuOpenId(null);
+    } catch (e) {
+      console.error("[projects] delete failed:", e);
+    }
+  };
+
   const loadTasks = async () => {
     try {
       const res = await fetch("/api/tasks");
@@ -125,6 +195,7 @@ export default function Home() {
         setChats(data.chats || []);
         checkProPlusAvailability();
         loadTasks();
+        loadProjects();
       }
     }
     init();
@@ -266,7 +337,7 @@ export default function Home() {
       const createRes = await fetch("/api/chats", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ title }),
+        body: JSON.stringify({ title, ...(activeProjectId ? { project_id: activeProjectId } : {}) }),
       });
       const createData = await createRes.json();
       chatId = createData.chat?.id;
@@ -571,17 +642,57 @@ export default function Home() {
                 <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
               </svg>
               Founders
+
+              {/* Projects Section */}
+              <div className={`px-3 pt-4 pb-1 text-[10px] uppercase tracking-wider font-semibold ${isDark ? "text-neutral-600" : "text-neutral-400"}`}>Projects</div>
+              {projects.map((p) => (
+                <div key={p.id} className="relative group">
+                  <button
+                    onClick={() => { setActiveProjectId(p.id === activeProjectId ? null : p.id); setSidebarOpen(true); }}
+                    className={`w-full text-left px-3 py-2 rounded-lg text-[13px] flex items-center gap-2 transition-colors ${
+                      activeProjectId === p.id
+                        ? isDark ? "bg-white/10 text-white" : "bg-black/10 text-black"
+                        : isDark ? "text-neutral-400 hover:bg-white/5 hover:text-white" : "text-neutral-600 hover:bg-black/5 hover:text-black"
+                    }`}
+                  >
+                    <span>{p.emoji || "📁"}</span>
+                    <span className="truncate flex-1">{p.name}</span>
+                  </button>
+                  {/* kebab menu */}
+                  <button
+                    onClick={() => setProjectMenuOpenId(projectMenuOpenId === p.id ? null : p.id)}
+                    className={`absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 p-1 rounded text-[11px] ${isDark ? "text-neutral-500 hover:text-white" : "text-neutral-400 hover:text-black"}`}
+                  >⋯</button>
+                  {projectMenuOpenId === p.id && (
+                    <div className={`absolute right-2 top-8 z-50 w-32 rounded-lg shadow-lg text-[12px] ${isDark ? "bg-[#1a1a1a] border border-white/10" : "bg-white border border-black/10"}`}>
+                      <button onClick={() => { const n = prompt("Rename project:", p.name); if (n) renameProject(p.id, n); setProjectMenuOpenId(null); }} className={`w-full text-left px-3 py-2 rounded-t-lg ${isDark ? "hover:bg-white/5 text-neutral-300" : "hover:bg-black/5 text-neutral-700"}`}>Rename</button>
+                      <button onClick={() => deleteProject(p.id)} className="w-full text-left px-3 py-2 rounded-b-lg text-red-400 hover:bg-red-500/10">Delete</button>
+                    </div>
+                  )}
+                </div>
+              ))}
+              <button
+                onClick={createProject}
+                className={`w-full text-left px-3 py-2 rounded-lg text-[13px] flex items-center gap-2 transition-colors ${isDark ? "text-neutral-500 hover:bg-white/5 hover:text-neutral-300" : "text-neutral-500 hover:bg-black/5 hover:text-neutral-700"}`}
+              >
+                <span>+</span> New project
+              </button>
             </a>
           </div>
 
           <div className="flex-1 overflow-y-auto px-2 pb-4">
-            {chats.length === 0 ? (
+            {/* filter chats by active project */}
+              {(() => {
+                const visibleChats = activeProjectId
+                  ? chats.filter(c => c.project_id === activeProjectId)
+                  : chats.filter(c => !c.project_id);
+                return visibleChats.length === 0 ? (
               <div className={`px-3 py-2 text-xs ${isDark ? "text-neutral-600" : "text-neutral-400"}`}>No chats yet</div>
             ) : (
               <>
                 <div className={`px-3 py-2 text-[10px] uppercase tracking-wider font-semibold ${isDark ? "text-neutral-600" : "text-neutral-400"}`}>Recent</div>
                 <div className="space-y-0.5">
-                  {chats.map((chat) => (
+                  {visibleChats.map((chat) => (
                     <button key={chat.id} onClick={() => loadChat(chat)} className={`group w-full text-left px-3 py-2 rounded-lg text-[13px] transition-colors flex items-center justify-between gap-2 ${activeChatId === chat.id ? isDark ? "bg-white/5 text-neutral-100" : "bg-black/5 text-neutral-900" : isDark ? "text-neutral-400 hover:bg-white/[0.03] hover:text-neutral-200" : "text-neutral-600 hover:bg-black/[0.03] hover:text-neutral-900"}`}>
                       <span className="truncate flex-1">{chat.title}</span>
                       <span onClick={(e) => deleteChat(e, chat.id)} className="opacity-0 group-hover:opacity-100 hover:text-red-400 transition-opacity p-0.5">
@@ -592,6 +703,9 @@ export default function Home() {
                 </div>
               </>
             )}
+              </div>
+            );
+          })()}
           </div>
 
           <div className={`relative px-3 py-3 border-t ${isDark ? "border-white/5" : "border-black/5"}`}>
