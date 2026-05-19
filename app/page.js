@@ -55,7 +55,8 @@ export default function Home() {
   const [uploadError, setUploadError] = useState("");
   const [tasks, setTasks] = useState([]);
   const [tasksLoading, setTasksLoading] = useState(false);
-  const [showTaskPanel, setShowTaskPanel] = useState(true);
+  const [showTaskPanel, setShowTaskPanel] = useState(false);
+  const TASKS_FEATURE_ENABLED = false; // TODO: re-enable when /api/tasks is stable
 
   const loadTasks = async () => {
     try {
@@ -761,7 +762,7 @@ export default function Home() {
       `}</style>
 
       {/* Today's Focus — right panel */}
-      {user && showTaskPanel && (
+      {user && TASKS_FEATURE_ENABLED && showTaskPanel && (
         <div className={`hidden lg:flex flex-col w-72 shrink-0 h-screen sticky top-0 border-l overflow-y-auto ${isDark ? "border-neutral-800 bg-neutral-950/80" : "border-neutral-200 bg-white/80"}`} style={{ backdropFilter: "blur(20px)" }}>
           <div className="p-4">
             {/* Header */}
@@ -839,7 +840,7 @@ export default function Home() {
       )}
 
       {/* Show panel button when hidden */}
-      {user && !showTaskPanel && (
+      {user && TASKS_FEATURE_ENABLED && !showTaskPanel && (
         <button
           onClick={() => setShowTaskPanel(true)}
           className={`hidden lg:flex fixed right-4 top-4 z-50 items-center gap-1.5 text-[12px] px-3 py-1.5 rounded-full border transition-all ${isDark ? "bg-neutral-900 border-neutral-700 text-neutral-400 hover:text-white" : "bg-white border-neutral-200 text-neutral-500 hover:text-neutral-900"}`}
