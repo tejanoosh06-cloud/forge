@@ -682,17 +682,13 @@ export default function Home() {
 
           <div className="flex-1 overflow-y-auto px-2 pb-4">
             {/* filter chats by active project */}
-              {(() => {
-                const visibleChats = activeProjectId
-                  ? chats.filter(c => c.project_id === activeProjectId)
-                  : chats.filter(c => !c.project_id);
-                return visibleChats.length === 0 ? (
+              {chats.filter(c => activeProjectId ? c.project_id === activeProjectId : !c.project_id).length === 0 ? (
               <div className={`px-3 py-2 text-xs ${isDark ? "text-neutral-600" : "text-neutral-400"}`}>No chats yet</div>
             ) : (
               <>
                 <div className={`px-3 py-2 text-[10px] uppercase tracking-wider font-semibold ${isDark ? "text-neutral-600" : "text-neutral-400"}`}>Recent</div>
                 <div className="space-y-0.5">
-                  {visibleChats.map((chat) => (
+                  {chats.filter(c => activeProjectId ? c.project_id === activeProjectId : !c.project_id).map((chat) => (
                     <button key={chat.id} onClick={() => loadChat(chat)} className={`group w-full text-left px-3 py-2 rounded-lg text-[13px] transition-colors flex items-center justify-between gap-2 ${activeChatId === chat.id ? isDark ? "bg-white/5 text-neutral-100" : "bg-black/5 text-neutral-900" : isDark ? "text-neutral-400 hover:bg-white/[0.03] hover:text-neutral-200" : "text-neutral-600 hover:bg-black/[0.03] hover:text-neutral-900"}`}>
                       <span className="truncate flex-1">{chat.title}</span>
                       <span onClick={(e) => deleteChat(e, chat.id)} className="opacity-0 group-hover:opacity-100 hover:text-red-400 transition-opacity p-0.5">
@@ -703,8 +699,6 @@ export default function Home() {
                 </div>
               </>
             )}
-            );
-          })()}
           </div>
 
           <div className={`relative px-3 py-3 border-t ${isDark ? "border-white/5" : "border-black/5"}`}>
