@@ -673,12 +673,30 @@ export default function Home() {
                     )}
                   </div>
                 ))}
-                <button
-                  onClick={() => { const n = prompt("New project name:"); if (n) createProject(n); }}
-                  className={`w-full text-left px-3 py-2 rounded-lg text-[13px] flex items-center gap-2 transition-colors ${isDark ? "text-neutral-400 hover:bg-white/5 hover:text-white" : "text-neutral-500 hover:bg-black/5 hover:text-neutral-900"}`}
-                >
-                  <span className="text-base leading-none">+</span> New project
-                </button>
+                {creatingProject ? (
+                  <div className="px-1 py-1">
+                    <input
+                      autoFocus
+                      type="text"
+                      value={newProjectName}
+                      onChange={(e) => setNewProjectName(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") { createProject(newProjectName); setCreatingProject(false); }
+                        if (e.key === "Escape") { setCreatingProject(false); setNewProjectName(""); }
+                      }}
+                      onBlur={() => { if (!newProjectName.trim()) setCreatingProject(false); }}
+                      placeholder="Project name..."
+                      className={`w-full px-3 py-2 rounded-lg text-[13px] outline-none border ${isDark ? "bg-white/5 border-white/10 text-white placeholder-neutral-600" : "bg-black/5 border-black/10 text-black placeholder-neutral-400"}`}
+                    />
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => { setCreatingProject(true); setNewProjectName(""); }}
+                    className={`w-full text-left px-3 py-2 rounded-lg text-[13px] flex items-center gap-2 transition-colors ${isDark ? "text-neutral-400 hover:bg-white/5 hover:text-white" : "text-neutral-500 hover:bg-black/5 hover:text-neutral-900"}`}
+                  >
+                    <span className="text-base leading-none">+</span> New project
+                  </button>
+                )}
               </div>
             </div>
           </div>
