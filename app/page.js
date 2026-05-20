@@ -65,6 +65,20 @@ export default function Home() {
   const [creatingProject, setCreatingProject] = useState(false);
   const [newProjectName, setNewProjectName] = useState("");
   const [projectMenuOpenId, setProjectMenuOpenId] = useState(null);
+  const [dragOverProjectId, setDragOverProjectId] = useState(null);
+
+  const moveChatToProject = async (chatId, projectId) => {
+    try {
+      await fetch("/api/chats", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id: chatId, project_id: projectId }),
+      });
+      setChats(prev => prev.map(c => c.id === chatId ? { ...c, project_id: projectId } : c));
+    } catch (e) {
+      console.error("[chats] move failed:", e);
+    }
+  };
 
   const loadProjects = async () => {
     try {
@@ -715,7 +729,7 @@ export default function Home() {
                 <div className={`px-3 py-2 text-[10px] uppercase tracking-wider font-semibold ${isDark ? "text-neutral-400" : "text-neutral-500"}`}>Recent</div>
                 <div className="space-y-0.5">
                   {chats.filter(c => activeProjectId ? c.project_id === activeProjectId : !c.project_id).map((chat) => (
-                    <button key={chat.id} onClick={() => loadChat(chat)} className={`group w-full text-left px-3 py-2 rounded-lg text-[13px] transition-colors flex items-center justify-between gap-2 ${activeChatId === chat.id ? isDark ? "bg-white/10 text-white" : "bg-black/10 text-neutral-900" : isDark ? "text-neutral-200 hover:bg-white/5 hover:text-white" : "text-neutral-700 hover:bg-black/5 hover:text-neutral-900"}`}>
+                    <button key={chat.id} draggable onDragStart={(e) => e.dataTransfer.setData("chatId", chat.id)} onClick={() => loadChat(chat)} className={`group w-full text-left px-3 py-2 rounded-lg text-[13px] transition-colors flex items-center justify-between gap-2 cursor-grab active:cursor-grabbing ${activeChatId === chat.id ? isDark ? "bg-white/10 text-white" : "bg-black/10 text-neutral-900" : isDark ? "text-neutral-200 hover:bg-white/5 hover:text-white" : "text-neutral-700 hover:bg-black/5 hover:text-neutral-900"}`}>
                       <span className="truncate flex-1">{chat.title}</span>
                       <span onClick={(e) => deleteChat(e, chat.id)} className="opacity-0 group-hover:opacity-100 hover:text-red-400 transition-opacity p-0.5">
                         <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 01-2 2H9a2 2 0 01-2-2L5 6"/></svg>
