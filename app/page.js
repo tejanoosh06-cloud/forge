@@ -832,22 +832,12 @@ export default function Home() {
                               <div style={{ position: "absolute", top: 8, left: 10, width: 14, height: 7, borderRadius: "50%", background: "rgba(255,255,255,0.7)", filter: "blur(3px)", animation: "shimmerFloat 3.5s ease-in-out infinite" }} />
                             </div>
                           </div>
-                          <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
-                            <div style={{ display: "flex", alignItems: "center", gap: 3, height: 18 }}>
-                              {[0,0.1,0.2,0.1,0].map((delay, i) => (
-                                <div key={i} style={{ width: 2, borderRadius: 10, background: "rgba(255,255,255,0.35)", animation: `barWave 1.4s ease-in-out ${delay}s infinite` }} />
-                              ))}
-                            </div>
-                            <span style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", letterSpacing: "0.08em", fontWeight: 400, animation: "labelPulse 2.8s infinite" }}>thinking...</span>
-                            <div style={{ display: "flex", alignItems: "center", gap: 3, height: 18 }}>
-                              {[0.2,0.1,0,0.1,0.2].map((delay, i) => (
-                                <div key={i} style={{ width: 2, borderRadius: 10, background: "rgba(255,255,255,0.35)", animation: `barWave 1.4s ease-in-out ${delay}s infinite` }} />
-                              ))}
-                            </div>
+                          <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                            <span key={loadingMessage} style={{ fontSize: 13, color: "rgba(255,255,255,0.55)", letterSpacing: "0.04em", fontWeight: 400, animation: "labelPulse 2.8s infinite" }}>{loadingMessage}</span>
                           </div>
                         </div>
                         </div>
-                        <span key={loadingMessage} className="text-sm bg-gradient-to-r from-blue-400 via-purple-400 to-pink-300 bg-clip-text text-transparent animate-in fade-in duration-500">{loadingMessage}</span>
+
                       </div>
                     </div>
                   )}
