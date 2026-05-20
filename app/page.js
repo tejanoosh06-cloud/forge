@@ -640,162 +640,143 @@ export default function Home() {
   return (
     <div className={`flex h-screen overflow-hidden ${isDark ? "bg-black text-neutral-100" : "bg-[#FAFAF7] text-neutral-900"}`}>
       {/* === SINGLE EXPANDING SIDEBAR === */}
-      {sidebarOpen && <div className="md:hidden fixed inset-0 z-30 bg-black/60" onClick={() => setSidebarOpen(false)} />}
-      <aside style={{
-        position: "fixed", top: 0, left: 0, bottom: 0, zIndex: 40,
-        width: sidebarOpen ? "260px" : "0px",
-        transition: "width 0.3s ease",
-        overflow: "hidden",
-        background: "#06060a",
-        borderRight: "0.5px solid rgba(255,255,255,0.06)",
-        flexShrink: 0,
-        display: "flex", flexDirection: "column"
-      }}>
-        <div style={{width: "260px", height: "100%", display: "flex", flexDirection: "column"}}>
-
-          {/* Logo row */}
-          <div style={{padding: "20px 20px 12px", display: "flex", alignItems: "center", justifyContent: "space-between", borderBottom: "0.5px solid rgba(255,255,255,0.05)"}}>
-            <button onClick={() => { setActiveChatId(null); setMessages([]); }} style={{fontWeight: 800, fontSize: 20, letterSpacing: "-0.02em", color: "#f0ece8", background: "none", border: "none", cursor: "pointer"}}>
-              Lore AI<span style={{color: "rgba(255,165,90,0.95)"}}>.</span>
+      {sidebarOpen && <div className="md:hidden fixed inset-0 z-30 bg-black/50" onClick={() => setSidebarOpen(false)} />}
+      <aside className={`
+        fixed md:relative inset-y-0 left-0 z-40 flex-shrink-0
+        ${sidebarOpen ? "w-64" : "w-0"}
+        transition-all duration-300 ease-in-out overflow-hidden
+        ${isDark ? "border-r border-white/5 bg-[#0A0A0A]" : "border-r border-black/5 bg-[#F4F2EC]"}
+      `}>
+        <div className="w-64 h-full flex flex-col">
+          <div className="px-4 py-4 flex items-center justify-between">
+            <button onClick={() => { setActiveChatId(null); setMessages([]); }} className={`font-bold text-[15px] tracking-tight transition-opacity hover:opacity-70 ${isDark ? "text-white" : "text-neutral-900"}`}>
+              Lore AI<span className="text-orange-500">.</span>
             </button>
-            <button onClick={() => setSidebarOpen(false)} style={{background: "rgba(255,255,255,0.04)", border: "0.5px solid rgba(255,255,255,0.08)", borderRadius: 8, padding: "5px 7px", cursor: "pointer", color: "rgba(255,255,255,0.4)", display: "flex", alignItems: "center", transition: "all 0.2s"}}
-              onMouseEnter={e => e.currentTarget.style.color = "#fff"}
-              onMouseLeave={e => e.currentTarget.style.color = "rgba(255,255,255,0.4)"}
-            >
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            <button onClick={() => setSidebarOpen(false)} className={`p-1.5 rounded-lg transition-all hover:scale-110 ${isDark ? "text-neutral-500 hover:text-white hover:bg-white/5" : "text-neutral-400 hover:text-neutral-900 hover:bg-black/5"}`}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
             </button>
           </div>
 
-          {/* Actions */}
-          <div style={{padding: "12px 12px 8px"}}>
-            <button onClick={newChat} style={{width: "100%", display: "flex", alignItems: "center", gap: 8, padding: "9px 12px", borderRadius: 10, fontSize: 13, color: "rgba(255,255,255,0.6)", background: "rgba(255,255,255,0.03)", border: "0.5px solid rgba(255,255,255,0.07)", cursor: "pointer", marginBottom: 6, transition: "all 0.2s", fontFamily: "inherit"}}
-              onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,165,90,0.07)"; e.currentTarget.style.borderColor = "rgba(255,165,90,0.18)"; e.currentTarget.style.color = "rgba(255,255,255,0.9)"; }}
-              onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.03)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.07)"; e.currentTarget.style.color = "rgba(255,255,255,0.6)"; }}
-            >
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          <div className="px-3 pb-3 space-y-0.5">
+            <button onClick={newChat} className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-[13px] font-medium transition-all hover:scale-[1.01] ${isDark ? "text-neutral-300 hover:bg-white/5 hover:text-white" : "text-neutral-700 hover:bg-black/5 hover:text-neutral-900"}`}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
               New chat
             </button>
-            <a href="/founders" style={{width: "100%", display: "flex", alignItems: "center", gap: 8, padding: "9px 12px", borderRadius: 10, fontSize: 13, color: "rgba(255,255,255,0.5)", background: "none", border: "none", cursor: "pointer", textDecoration: "none", transition: "all 0.2s"}}
-              onMouseEnter={e => { e.currentTarget.style.color = "rgba(255,255,255,0.85)"; e.currentTarget.style.background = "rgba(255,255,255,0.04)"; }}
-              onMouseLeave={e => { e.currentTarget.style.color = "rgba(255,255,255,0.5)"; e.currentTarget.style.background = "none"; }}
-            >
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+            <a href="/founders" className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-lg text-[13px] font-medium transition-all hover:scale-[1.01] ${isDark ? "text-neutral-300 hover:bg-white/5 hover:text-white" : "text-neutral-700 hover:bg-black/5 hover:text-neutral-900"}`}>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
               Founders
             </a>
           </div>
 
-          {/* Projects */}
-          <div style={{padding: "0 12px 8px"}}>
-            <div style={{fontSize: 9, letterSpacing: "0.1em", textTransform: "uppercase", color: "rgba(255,255,255,0.25)", padding: "8px 4px 6px"}}>Projects</div>
-            <div>
-              {projects.map((p) => (
-                <div key={p.id} style={{position: "relative"}} className="group">
+          <div className="px-3 pb-3 space-y-0.5">
+            {/* === Projects Section === */}
+            <div className="mt-4">
+              <div className={`px-3 pb-1 text-[10px] uppercase tracking-wider font-semibold ${isDark ? "text-neutral-400" : "text-neutral-500"}`}>Projects</div>
+              <div className="space-y-0.5">
+                {projects.map((p) => (
+                  <div key={p.id} className="relative group">
+                    <button
+                      onClick={() => { setActiveProjectId(p.id === activeProjectId ? null : p.id); setSidebarOpen(true); }}
+                      className={`w-full text-left px-3 py-2 rounded-lg text-[13px] flex items-center gap-2 transition-colors ${
+                        activeProjectId === p.id
+                          ? isDark ? "bg-white/10 text-white" : "bg-black/10 text-neutral-900"
+                          : isDark ? "text-neutral-200 hover:bg-white/5 hover:text-white" : "text-neutral-700 hover:bg-black/5 hover:text-neutral-900"
+                      }`}
+                    >
+                      <svg className="flex-shrink-0 w-3.5 h-3.5 opacity-60" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+                      <span className="truncate flex-1">{p.name}</span>
+                    </button>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setProjectMenuOpenId(projectMenuOpenId === p.id ? null : p.id); }}
+                      className={`absolute right-2 top-1/2 -translate-y-1/2 opacity-0 group-hover:opacity-100 p-1 rounded text-[14px] leading-none ${isDark ? "text-neutral-400 hover:text-white" : "text-neutral-500 hover:text-black"}`}
+                    >⋯</button>
+                    {projectMenuOpenId === p.id && (
+                      <div className={`absolute right-2 top-8 z-50 w-32 rounded-lg shadow-lg overflow-hidden text-[12px] ${isDark ? "bg-[#1a1a1a] border border-white/10" : "bg-white border border-black/10"}`}>
+                        <button onClick={() => { const n = prompt("Rename project:", p.name); if (n) renameProject(p.id, n); setProjectMenuOpenId(null); }} className={`w-full text-left px-3 py-2 ${isDark ? "hover:bg-white/5 text-neutral-200" : "hover:bg-black/5 text-neutral-700"}`}>Rename</button>
+                        <button onClick={() => deleteProject(p.id)} className="w-full text-left px-3 py-2 text-red-400 hover:bg-red-500/10">Delete</button>
+                      </div>
+                    )}
+                  </div>
+                ))}
+                {creatingProject ? (
+                  <div className="px-1 py-1">
+                    <input
+                      autoFocus
+                      type="text"
+                      value={newProjectName}
+                      onChange={(e) => setNewProjectName(e.target.value)}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter") { createProject(newProjectName); setCreatingProject(false); }
+                        if (e.key === "Escape") { setCreatingProject(false); setNewProjectName(""); }
+                      }}
+                      onBlur={() => { if (!newProjectName.trim()) setCreatingProject(false); }}
+                      placeholder="Project name..."
+                      className={`w-full px-3 py-2 rounded-lg text-[13px] outline-none border ${isDark ? "bg-white/5 border-white/10 text-white placeholder-neutral-600" : "bg-black/5 border-black/10 text-black placeholder-neutral-400"}`}
+                    />
+                  </div>
+                ) : (
                   <button
-                    onClick={() => { setActiveProjectId(p.id === activeProjectId ? null : p.id); }}
-                    style={{width: "100%", textAlign: "left", padding: "8px 10px", borderRadius: 9, fontSize: 12, display: "flex", alignItems: "center", gap: 7, cursor: "pointer", border: "none", fontFamily: "inherit", transition: "all 0.15s",
-                      background: activeProjectId === p.id ? "rgba(255,165,90,0.1)" : "none",
-                      color: activeProjectId === p.id ? "rgba(255,165,90,0.9)" : "rgba(255,255,255,0.55)",
-                      borderLeft: activeProjectId === p.id ? "2px solid rgba(255,165,90,0.5)" : "2px solid transparent"
-                    }}
+                    onClick={() => { setCreatingProject(true); setNewProjectName(""); }}
+                    className={`w-full text-left px-3 py-2 rounded-lg text-[13px] flex items-center gap-2 transition-colors ${isDark ? "text-neutral-400 hover:bg-white/5 hover:text-white" : "text-neutral-500 hover:bg-black/5 hover:text-neutral-900"}`}
                   >
-                    <svg style={{flexShrink:0,opacity:0.5}} width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
-                    <span style={{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",flex:1}}>{p.name}</span>
+                    <span className="text-base leading-none">+</span> New project
                   </button>
-                  <button
-                    onClick={(e) => { e.stopPropagation(); setProjectMenuOpenId(projectMenuOpenId === p.id ? null : p.id); }}
-                    style={{position:"absolute",right:6,top:"50%",transform:"translateY(-50%)",background:"none",border:"none",cursor:"pointer",color:"rgba(255,255,255,0.3)",padding:"2px 5px",borderRadius:4,fontSize:14,opacity:0,transition:"opacity 0.15s"}}
-                    className="group-hover:opacity-100"
-                  >⋯</button>
-                  {projectMenuOpenId === p.id && (
-                    <div style={{position:"absolute",right:8,top:32,zIndex:50,width:128,borderRadius:10,overflow:"hidden",background:"#111",border:"0.5px solid rgba(255,255,255,0.1)",boxShadow:"0 8px 32px rgba(0,0,0,0.5)"}}>
-                      <button onClick={() => { const n = prompt("Rename:", p.name); if (n) renameProject(p.id, n); setProjectMenuOpenId(null); }} style={{width:"100%",textAlign:"left",padding:"9px 12px",fontSize:12,color:"rgba(255,255,255,0.6)",background:"none",border:"none",cursor:"pointer",fontFamily:"inherit"}}>Rename</button>
-                      <button onClick={() => deleteProject(p.id)} style={{width:"100%",textAlign:"left",padding:"9px 12px",fontSize:12,color:"rgba(239,68,68,0.8)",background:"none",border:"none",cursor:"pointer",fontFamily:"inherit"}}>Delete</button>
-                    </div>
-                  )}
-                </div>
-              ))}
-              {creatingProject ? (
-                <input autoFocus type="text" value={newProjectName}
-                  onChange={(e) => setNewProjectName(e.target.value)}
-                  onKeyDown={(e) => { if (e.key === "Enter") { createProject(newProjectName); setCreatingProject(false); } if (e.key === "Escape") { setCreatingProject(false); setNewProjectName(""); } }}
-                  onBlur={() => { if (!newProjectName.trim()) setCreatingProject(false); }}
-                  placeholder="Project name..."
-                  style={{width:"100%",padding:"8px 10px",borderRadius:9,fontSize:12,background:"rgba(255,255,255,0.05)",border:"0.5px solid rgba(255,165,90,0.3)",color:"#fff",outline:"none",fontFamily:"inherit",marginTop:4}}
-                />
-              ) : (
-                <button onClick={() => { setCreatingProject(true); setNewProjectName(""); }}
-                  style={{width:"100%",textAlign:"left",padding:"7px 10px",borderRadius:9,fontSize:12,color:"rgba(255,255,255,0.3)",background:"none",border:"none",cursor:"pointer",display:"flex",alignItems:"center",gap:6,fontFamily:"inherit",marginTop:2}}
-                >
-                  <span style={{fontSize:14,lineHeight:1}}>+</span> New project
-                </button>
-              )}
+                )}
+              </div>
             </div>
           </div>
 
-          {/* Chats */}
-          <div style={{flex:1,overflowY:"auto",padding:"0 12px 8px"}}>
-            {chats.filter(c => activeProjectId ? c.project_id === activeProjectId : !c.project_id).length === 0 ? (
-              <div style={{fontSize:11,color:"rgba(255,255,255,0.2)",padding:"8px 4px"}}>No chats yet</div>
+          <div className="flex-1 overflow-y-auto px-2 pb-4">
+            {/* filter chats by active project */}
+              {chats.filter(c => activeProjectId ? c.project_id === activeProjectId : !c.project_id).length === 0 ? (
+              <div className={`px-3 py-2 text-xs ${isDark ? "text-neutral-600" : "text-neutral-400"}`}>No chats yet</div>
             ) : (
               <>
-                <div style={{fontSize:9,letterSpacing:"0.1em",textTransform:"uppercase",color:"rgba(255,255,255,0.25)",padding:"8px 4px 6px"}}>Recent</div>
-                {chats.filter(c => activeProjectId ? c.project_id === activeProjectId : !c.project_id).map((chat) => (
-                  <button key={chat.id} draggable
-                    onDragStart={(e) => { e.dataTransfer.effectAllowed = "move"; e.dataTransfer.setData("text/plain", chat.id); }}
-                    onClick={() => loadChat(chat)}
-                    style={{width:"100%",textAlign:"left",padding:"8px 10px",borderRadius:9,fontSize:12,display:"flex",alignItems:"center",justifyContent:"space-between",gap:6,cursor:"grab",border:"none",fontFamily:"inherit",transition:"all 0.15s",
-                      background: activeChatId === chat.id ? "rgba(255,255,255,0.06)" : "none",
-                      color: activeChatId === chat.id ? "rgba(255,255,255,0.9)" : "rgba(255,255,255,0.5)",
-                      borderLeft: activeChatId === chat.id ? "2px solid rgba(190,165,240,0.5)" : "2px solid transparent"
-                    }}
-                    className="group"
-                  >
-                    <span style={{overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap",flex:1}}>{chat.title}</span>
-                    <span onClick={(e) => deleteChat(e, chat.id)} style={{opacity:0,color:"rgba(239,68,68,0.6)",padding:2,flexShrink:0,display:"flex"}} className="group-hover:opacity-100">
-                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 01-2 2H9a2 2 0 01-2-2L5 6"/></svg>
-                    </span>
-                  </button>
-                ))}
+                <div className={`px-3 py-2 text-[10px] uppercase tracking-wider font-semibold ${isDark ? "text-neutral-400" : "text-neutral-500"}`}>Recent</div>
+                <div className="space-y-0.5">
+                  {chats.filter(c => activeProjectId ? c.project_id === activeProjectId : !c.project_id).map((chat) => (
+                    <button key={chat.id} draggable onDragStart={(e) => { e.dataTransfer.effectAllowed = "move"; e.dataTransfer.setData("text/plain", chat.id); }} onClick={() => loadChat(chat)} className={`group w-full text-left px-3 py-2 rounded-lg text-[13px] transition-colors flex items-center justify-between gap-2 cursor-grab active:cursor-grabbing ${activeChatId === chat.id ? isDark ? "bg-white/10 text-white" : "bg-black/10 text-neutral-900" : isDark ? "text-neutral-200 hover:bg-white/5 hover:text-white" : "text-neutral-700 hover:bg-black/5 hover:text-neutral-900"}`}>
+                      <span className="truncate flex-1">{chat.title}</span>
+                      <span onClick={(e) => deleteChat(e, chat.id)} className="opacity-0 group-hover:opacity-100 hover:text-red-400 transition-opacity p-0.5">
+                        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-2 14a2 2 0 01-2 2H9a2 2 0 01-2-2L5 6"/></svg>
+                      </span>
+                    </button>
+                  ))}
+                </div>
               </>
             )}
           </div>
 
-          {/* User row */}
-          <div style={{padding:"12px 12px",borderTop:"0.5px solid rgba(255,255,255,0.06)"}}>
-            <button onClick={() => setUserMenuOpen(!userMenuOpen)}
-              style={{width:"100%",display:"flex",alignItems:"center",gap:10,padding:"8px 10px",borderRadius:10,background:"rgba(255,255,255,0.03)",border:"0.5px solid rgba(255,255,255,0.07)",cursor:"pointer",transition:"all 0.2s",fontFamily:"inherit"}}
-              onMouseEnter={e => { e.currentTarget.style.background = "rgba(255,255,255,0.06)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.12)"; }}
-              onMouseLeave={e => { e.currentTarget.style.background = "rgba(255,255,255,0.03)"; e.currentTarget.style.borderColor = "rgba(255,255,255,0.07)"; }}
-            >
+          {/* User row at bottom of sidebar */}
+          <div className={`px-3 py-3 mt-auto border-t ${isDark ? "border-white/5" : "border-black/5"}`}>
+            <button onClick={() => setUserMenuOpen(!userMenuOpen)} className={`w-full flex items-center gap-2.5 px-2 py-2 rounded-lg transition-all hover:scale-[1.01] ${isDark ? "hover:bg-white/5" : "hover:bg-black/5"}`}>
               {userAvatar
-                ? <img src={userAvatar} alt={userName} style={{width:28,height:28,borderRadius:"50%",flexShrink:0,objectFit:"cover"}} />
-                : <div style={{width:28,height:28,borderRadius:"50%",flexShrink:0,background:"linear-gradient(135deg,rgba(255,165,90,0.3),rgba(190,165,240,0.3))",display:"flex",alignItems:"center",justifyContent:"center",fontSize:12,fontWeight:700,color:"rgba(255,255,255,0.8)"}}>{userInitial}</div>
+                ? <img src={userAvatar} alt={userName} className="w-7 h-7 rounded-full flex-shrink-0 object-cover" />
+                : <div className="w-7 h-7 rounded-full flex-shrink-0 bg-gradient-to-br from-blue-500 via-purple-500 to-pink-400 flex items-center justify-center text-white text-[12px] font-semibold">{userInitial}</div>
               }
-              <span style={{flex:1,textAlign:"left",fontSize:13,color:"rgba(255,255,255,0.65)",overflow:"hidden",textOverflow:"ellipsis",whiteSpace:"nowrap"}}>{userName}</span>
+              <span className={`flex-1 text-left text-[13px] font-medium truncate ${isDark ? "text-neutral-200" : "text-neutral-800"}`}>{userName}</span>
             </button>
           </div>
         </div>
       </aside>
 
       {/* === MOBILE BOTTOM NAV === */}
-      <div style={{display:"none"}} className="md:hidden-mobile-nav">
-      </div>
-      <div className="mobile-bottom-nav">
-        <button onClick={() => { setActiveChatId(null); setMessages([]); setSidebarOpen(false); }} className="mob-btn">
+      <div className={`md:hidden fixed bottom-0 left-0 right-0 z-50 flex items-center justify-around px-2 py-2 border-t ${isDark ? "bg-[#0A0A0A] border-white/5" : "bg-[#F4F2EC] border-black/5"}`}>
+        <button onClick={() => { setActiveChatId(null); setMessages([]); setSidebarOpen(false); }} className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg ${isDark ? "text-neutral-400" : "text-neutral-500"}`}>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
-          <span>Home</span>
+          <span className="text-[10px]">Home</span>
         </button>
-        <button onClick={() => setSidebarOpen(!sidebarOpen)} className={`mob-btn ${sidebarOpen ? "mob-active" : ""}`}>
+        <button onClick={() => setSidebarOpen(!sidebarOpen)} className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg ${sidebarOpen ? "text-white" : isDark ? "text-neutral-400" : "text-neutral-500"}`}>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
-          <span>Chats</span>
+          <span className="text-[10px]">Chats</span>
         </button>
-        <button onClick={newChat} className="mob-btn">
+        <button onClick={newChat} className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg ${isDark ? "text-neutral-400" : "text-neutral-500"}`}>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          <span>New</span>
+          <span className="text-[10px]">New</span>
         </button>
-        <a href="/founders" className="mob-btn">
+        <a href="/founders" className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg ${isDark ? "text-neutral-400" : "text-neutral-500"}`}>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
-          <span>Founders</span>
+          <span className="text-[10px]">Founders</span>
         </a>
         <button onClick={() => setUserMenuOpen(!userMenuOpen)} className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg ${isDark ? "text-neutral-400" : "text-neutral-500"}`}>
           {userAvatar
