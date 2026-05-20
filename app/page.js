@@ -663,7 +663,7 @@ export default function Home() {
                           : isDark ? "text-neutral-200 hover:bg-white/5 hover:text-white" : "text-neutral-700 hover:bg-black/5 hover:text-neutral-900"
                       }`}
                     >
-                      <span className="flex-shrink-0">{p.emoji || "📁"}</span>
+                      <svg className="flex-shrink-0 w-3.5 h-3.5 opacity-60" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
                       <span className="truncate flex-1">{p.name}</span>
                     </button>
                     <button
