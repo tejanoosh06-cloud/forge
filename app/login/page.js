@@ -24,10 +24,7 @@ export default function LoginPage() {
 
       <nav className="nav">
         <div className="logo">Lore AI<span className="logo-dot">.</span></div>
-        <div className="navlinks">
-          <a href="/about">About</a>
-          <a href="/founders">Community</a>
-        </div>
+<div className="navlinks"></div>
         <a href="/pricing" className="nav-pricing">Pricing</a>
       </nav>
 
@@ -36,7 +33,7 @@ export default function LoginPage() {
           <div className="eyebrow"><div className="dot" /><span>Your AI co-founder for India</span></div>
           <h1 className="h1">From idea<br /><span className="dim">to</span> execution<span className="accent">.</span></h1>
           <div className="rule" />
-          <p className="sub">Your AI co-founder that knows India inside out — GST, fundraising, legal, GTM, and everything in between.</p>
+          <p className="sub">Ask anything. Get answers that actually work in India. Build faster, think clearer, move smarter.</p>
           <div className="btns">
             <button onClick={signInWithGoogle} disabled={loading} className="btn">
               <svg width="14" height="14" viewBox="0 0 24 24" style={{flexShrink:0}}>
@@ -47,7 +44,7 @@ export default function LoginPage() {
               </svg>
               {loading ? "Signing in..." : "Continue with Google"}
             </button>
-            <a href="/about" className="btn-ghost">How it works →</a>
+
           </div>
           <p className="fine">Free to start · No credit card · Made in India</p>
         </div>
@@ -71,8 +68,8 @@ export default function LoginPage() {
           </div>
 
           <div className="fc fc-c">
-            <div className="fc-icon">⚡</div>
-            <div className="fc-txt">GST filing in <span className="fc-o">3 mins</span></div>
+            <div className="fc-icon">🧠</div>
+            <div className="fc-txt">Answers in <span className="fc-o">seconds</span></div>
           </div>
 
           <div className="fc fc-d">
@@ -209,23 +206,36 @@ export default function LoginPage() {
 
         @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
 
-        @media(max-width:768px){
-          .nav{padding:18px 20px}
-          .navlinks{display:none}
-          .nav-pricing{display:none}
-          .body{grid-template-columns:1fr;padding:24px 20px 0;gap:28px}
+        @media(max-width:900px){
+          .body{grid-template-columns:1fr;padding:28px 24px 0;gap:32px}
           .left{padding-right:0}
-          .h1{font-size:42px}
+          .right{grid-template-columns:1fr 1fr}
+          .stats{grid-template-columns:1fr 1fr}
+          .stat{padding:16px 24px}
+        }
+        @media(max-width:600px){
+          .nav{padding:16px 20px}
+          .navlinks{display:none}
+          .nav-pricing{font-size:11px;padding:5px 12px}
+          .body{padding:20px 20px 0;gap:24px}
+          .h1{font-size:36px;line-height:1}
+          .rule{margin:18px 0}
+          .sub{font-size:13px;max-width:100%}
+          .btns{flex-direction:column;align-items:flex-start;gap:14px}
+          .btn{width:100%;justify-content:center}
           .right{grid-template-columns:1fr 1fr;gap:8px}
-          .fc{padding:14px}
+          .fc{padding:13px}
           .fc-val{font-size:18px}
-          .india-row{gap:8px}
-          .india-val{font-size:13px}
-          .stats{grid-template-columns:1fr 1fr;margin-top:24px}
+          .fc-e{padding:13px}
+          .india-val{font-size:12px}
+          .india-lbl{font-size:7px}
+          .india-div{height:18px}
+          .stats{grid-template-columns:1fr 1fr;margin-top:20px}
           .stat{padding:14px 20px}
           .stat-n{font-size:16px}
+          .stat-l{font-size:8px}
           .footer{padding:14px 20px;flex-direction:column;gap:10px;text-align:center}
-          .footer-r{gap:16px}
+          .footer-r{justify-content:center}
         }
       `}</style>
     </div>
