@@ -79,6 +79,8 @@ export default function Home() {
   const createProject = async (name) => {
     const trimmed = (name || "").trim();
     if (!trimmed) return;
+    setCreatingProject(false);
+    setNewProjectName("");
     try {
       const res = await fetch("/api/projects", {
         method: "POST",
@@ -86,14 +88,17 @@ export default function Home() {
         body: JSON.stringify({ name: trimmed, emoji: "📁" }),
       });
       const data = await res.json();
+      console.log("[projects] create response:", data);
       if (data.project) {
         setProjects((prev) => [data.project, ...prev]);
         setActiveProjectId(data.project.id);
-        setNewProjectName("");
-        setCreatingProject(false);
+      } else {
+        console.error("[projects] no project in response:", data);
+        await loadProjects();
       }
     } catch (e) {
       console.error("[projects] create failed:", e);
+      await loadProjects();
     }
   };
 
