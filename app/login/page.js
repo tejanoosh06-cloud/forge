@@ -50,35 +50,35 @@ export default function LoginPage() {
         body { background: #000; }
         .orb { position: absolute; border-radius: 50%; filter: blur(130px); will-change: transform; }
 
-        /* TOP-LEFT: orange — exactly like logo */
+        /* TOP-LEFT: warm amber — logo exact */
         .orb-amber {
-          width: 750px; height: 750px;
-          background: radial-gradient(circle, rgba(255,140,20,1) 0%, rgba(220,90,0,0.7) 45%, transparent 70%);
-          top: -280px; left: -220px;
+          width: 680px; height: 680px;
+          background: radial-gradient(circle, rgba(220,120,30,0.65) 0%, rgba(180,80,10,0.4) 45%, transparent 70%);
+          top: -240px; left: -180px;
           animation: floatAmber 18s ease-in-out infinite;
         }
 
-        /* CENTER: muted dark purple bridge — subtle, not dominant */
+        /* CENTER: dark maroon-purple — logo exact */
         .orb-purple {
-          width: 500px; height: 500px;
-          background: radial-gradient(circle, rgba(80,30,100,0.5) 0%, rgba(50,15,70,0.3) 50%, transparent 70%);
-          top: 20%; left: 20%;
+          width: 580px; height: 580px;
+          background: radial-gradient(circle, rgba(90,40,80,0.55) 0%, rgba(60,20,60,0.35) 50%, transparent 70%);
+          top: 15%; left: 12%;
           animation: floatPurple 24s ease-in-out infinite;
         }
 
-        /* BOTTOM-RIGHT: coral red — exactly like logo */
+        /* BOTTOM-RIGHT: salmon coral pink — logo exact */
         .orb-coral {
-          width: 800px; height: 800px;
-          background: radial-gradient(circle, rgba(240,80,60,0.9) 0%, rgba(200,40,40,0.6) 40%, transparent 70%);
-          bottom: -280px; right: -220px;
+          width: 720px; height: 720px;
+          background: radial-gradient(circle, rgba(210,90,90,0.6) 0%, rgba(180,60,70,0.38) 42%, transparent 70%);
+          bottom: -240px; right: -180px;
           animation: floatCoral 20s ease-in-out infinite;
         }
 
-        /* RIGHT: faint white/grey glow — matches logo right side */
+        /* RIGHT: soft grey-white — logo exact */
         .orb-pink {
-          width: 550px; height: 550px;
-          background: radial-gradient(circle, rgba(200,190,190,0.25) 0%, rgba(160,150,150,0.12) 50%, transparent 70%);
-          top: 15%; right: -80px;
+          width: 480px; height: 480px;
+          background: radial-gradient(circle, rgba(180,175,175,0.18) 0%, rgba(140,135,135,0.09) 50%, transparent 70%);
+          top: 18%; right: -60px;
           animation: floatPink 26s ease-in-out infinite;
         }
 
