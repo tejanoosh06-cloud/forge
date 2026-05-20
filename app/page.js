@@ -44,7 +44,7 @@ export default function Home() {
   const [loading, setLoading] = useState(false);
   const [streaming, setStreaming] = useState(false);
   const [loadingMessage, setLoadingMessage] = useState("Thinking...");
-  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(typeof window !== "undefined" ? window.innerWidth >= 768 : true);
   const [chats, setChats] = useState([]);
   const [activeChatId, setActiveChatId] = useState(null);
   const [theme, setTheme] = useState("dark");
@@ -639,41 +639,59 @@ export default function Home() {
 
   return (
     <div className={`flex h-screen overflow-hidden ${isDark ? "bg-black text-neutral-100" : "bg-[#FAFAF7] text-neutral-900"}`}>
-      {/* === NARROW ICON RAIL === */}
-      <nav className={`flex-shrink-0 w-14 h-full flex flex-col items-center py-3 gap-1 ${isDark ? "bg-[#0A0A0A] border-r border-white/5" : "bg-[#F4F2EC] border-r border-black/5"}`}>
+      {/* === NARROW ICON RAIL — desktop only === */}
+      <nav className={`hidden md:flex flex-shrink-0 w-14 h-full flex-col items-center py-3 gap-1 ${isDark ? "bg-[#0A0A0A] border-r border-white/5" : "bg-[#F4F2EC] border-r border-black/5"}`}>
         {/* Logo / home */}
         <button onClick={() => { setActiveChatId(null); setMessages([]); }} className="w-9 h-9 flex items-center justify-center mb-2 group" title="Home">
           <span className={`font-bold text-[15px] tracking-tight transition-transform duration-150 group-hover:-translate-y-0.5 ${isDark ? "text-white" : "text-neutral-900"}`}>L<span className="text-orange-500">.</span></span>
         </button>
 
         {/* New chat */}
-        <button onClick={newChat} title="New chat" className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-150 hover:-translate-y-0.5 hover:scale-110 ${isDark ? "text-neutral-400 hover:text-white hover:bg-white/8" : "text-neutral-500 hover:text-neutral-900 hover:bg-black/8"}`}>
+        <button onClick={newChat} title="New chat" className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-150 hover:-translate-y-0.5 hover:scale-110 ${isDark ? "text-neutral-400 hover:text-white hover:bg-white/10" : "text-neutral-500 hover:text-neutral-900 hover:bg-black/10"}`}>
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
         </button>
 
         {/* Toggle chats panel */}
-        <button onClick={() => setSidebarOpen(!sidebarOpen)} title="Chats" className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-150 hover:-translate-y-0.5 hover:scale-110 ${sidebarOpen ? isDark ? "bg-white/10 text-white" : "bg-black/10 text-neutral-900" : isDark ? "text-neutral-400 hover:text-white hover:bg-white/8" : "text-neutral-500 hover:text-neutral-900 hover:bg-black/8"}`}>
+        <button onClick={() => setSidebarOpen(!sidebarOpen)} title="Chats" className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-150 hover:-translate-y-0.5 hover:scale-110 ${sidebarOpen ? isDark ? "bg-white/10 text-white" : "bg-black/10 text-neutral-900" : isDark ? "text-neutral-400 hover:text-white hover:bg-white/10" : "text-neutral-500 hover:text-neutral-900 hover:bg-black/10"}`}>
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
         </button>
 
         {/* Founders */}
-        <a href="/founders" title="Founders" className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-150 hover:-translate-y-0.5 hover:scale-110 ${isDark ? "text-neutral-400 hover:text-white hover:bg-white/8" : "text-neutral-500 hover:text-neutral-900 hover:bg-black/8"}`}>
+        <a href="/founders" title="Founders" className={`w-9 h-9 rounded-xl flex items-center justify-center transition-all duration-150 hover:-translate-y-0.5 hover:scale-110 ${isDark ? "text-neutral-400 hover:text-white hover:bg-white/10" : "text-neutral-500 hover:text-neutral-900 hover:bg-black/10"}`}>
           <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
         </a>
 
         {/* Profile */}
         <div className="flex-1" />
-        <button onClick={() => setUserMenuOpen(!userMenuOpen)} title={userName} className="w-9 h-9 rounded-full flex items-center justify-center transition-all duration-150 hover:-translate-y-0.5 hover:scale-110 overflow-hidden">
-          {userAvatar
-            ? <img src={userAvatar} alt={userName} className="w-9 h-9 rounded-full object-cover" />
-            : <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 via-purple-500 to-pink-400 flex items-center justify-center text-white text-[13px] font-semibold">{userInitial}</div>
-          }
-        </button>
+        <div className="relative">
+          {userMenuOpen && (
+            <div className={`absolute bottom-12 left-11 z-50 w-48 rounded-xl overflow-hidden shadow-2xl ${isDark ? "bg-[#1a1a1a] border border-white/10" : "bg-white border border-black/10"}`}>
+              <div className={`px-3 py-2.5 text-[11px] truncate ${isDark ? "text-neutral-500 border-b border-white/5" : "text-neutral-500 border-b border-black/5"}`}>{userEmail}</div>
+              <a href="/profile" className={`block px-3 py-2.5 text-[13px] ${isDark ? "hover:bg-white/5 text-neutral-300" : "hover:bg-black/5 text-neutral-700"}`}>Edit profile</a>
+              <button onClick={() => { setTheme(isDark ? "light" : "dark"); setUserMenuOpen(false); }} className={`w-full text-left px-3 py-2.5 text-[13px] ${isDark ? "hover:bg-white/5 text-neutral-300" : "hover:bg-black/5 text-neutral-700"}`}>{isDark ? "Light mode" : "Dark mode"}</button>
+              <button onClick={signOut} className={`w-full text-left px-3 py-2.5 text-[13px] ${isDark ? "hover:bg-white/5 text-red-400" : "hover:bg-black/5 text-red-600"}`}>Sign out</button>
+            </div>
+          )}
+          <button onClick={() => setUserMenuOpen(!userMenuOpen)} title={userName} className="w-9 h-9 rounded-full flex items-center justify-center transition-all duration-150 hover:-translate-y-0.5 hover:scale-110 overflow-hidden">
+            {userAvatar
+              ? <img src={userAvatar} alt={userName} className="w-9 h-9 rounded-full object-cover" />
+              : <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-500 via-purple-500 to-pink-400 flex items-center justify-center text-white text-[13px] font-semibold">{userInitial}</div>
+            }
+          </button>
+        </div>
       </nav>
 
       {/* === SLIDING CHATS PANEL === */}
-      <aside className={`${sidebarOpen ? "w-56" : "w-0"} transition-all duration-300 ease-in-out overflow-hidden flex-shrink-0 ${isDark ? "border-r border-white/5 bg-[#0D0D0D]" : "border-r border-black/5 bg-[#F0EEE8]"}`}>
-        <div className="w-56 h-full flex flex-col">
+      {/* Mobile overlay backdrop */}
+      {sidebarOpen && <div className="md:hidden fixed inset-0 z-30 bg-black/50" onClick={() => setSidebarOpen(false)} />}
+      <aside className={`
+        md:relative md:flex-shrink-0
+        fixed inset-y-0 left-14 z-40
+        ${sidebarOpen ? "w-64 md:w-56" : "w-0"}
+        transition-all duration-300 ease-in-out overflow-hidden
+        ${isDark ? "border-r border-white/5 bg-[#0D0D0D]" : "border-r border-black/5 bg-[#F0EEE8]"}
+      `}>
+        <div className="w-64 md:w-56 h-full flex flex-col">
           <div className="px-3 py-4 flex items-center justify-between">
             <span className={`text-[11px] uppercase tracking-widest font-semibold ${isDark ? "text-neutral-500" : "text-neutral-400"}`}>Menu</span>
           </div>
@@ -771,23 +789,47 @@ export default function Home() {
             )}
           </div>
 
-          <div className={`relative px-3 py-3 border-t ${isDark ? "border-white/5" : "border-black/5"}`}>
-
-
-            <button onClick={() => setUserMenuOpen(!userMenuOpen)} className={`w-full flex items-center gap-2.5 px-2 py-2 rounded-lg transition-colors ${isDark ? "hover:bg-white/5" : "hover:bg-black/5"}`}>
-              {userAvatar ? (
-                <img src={userAvatar} alt={userName} className="w-7 h-7 rounded-full flex-shrink-0" />
-              ) : (
-                <div className="w-7 h-7 rounded-full flex-shrink-0 bg-gradient-to-br from-blue-500 via-purple-500 to-pink-400 flex items-center justify-center text-white text-[12px] font-semibold">{userInitial}</div>
-              )}
-              <span className={`flex-1 text-left text-[13px] font-medium truncate ${isDark ? "text-neutral-200" : "text-neutral-800"}`}>{userName}</span>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={isDark ? "text-neutral-500" : "text-neutral-400"}><polyline points="6 9 12 15 18 9"/></svg>
-            </button>
-          </div>
         </div>
       </aside>
 
-      <main className="flex-1 flex flex-col min-w-0 relative">
+      {/* === MOBILE BOTTOM NAV === */}
+      <div className={`md:hidden fixed bottom-0 left-0 right-0 z-50 flex items-center justify-around px-2 py-2 border-t ${isDark ? "bg-[#0A0A0A] border-white/5" : "bg-[#F4F2EC] border-black/5"}`}>
+        <button onClick={() => { setActiveChatId(null); setMessages([]); setSidebarOpen(false); }} className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg ${isDark ? "text-neutral-400" : "text-neutral-500"}`}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+          <span className="text-[10px]">Home</span>
+        </button>
+        <button onClick={() => setSidebarOpen(!sidebarOpen)} className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg ${sidebarOpen ? "text-white" : isDark ? "text-neutral-400" : "text-neutral-500"}`}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+          <span className="text-[10px]">Chats</span>
+        </button>
+        <button onClick={newChat} className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg ${isDark ? "text-neutral-400" : "text-neutral-500"}`}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          <span className="text-[10px]">New</span>
+        </button>
+        <a href="/founders" className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg ${isDark ? "text-neutral-400" : "text-neutral-500"}`}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
+          <span className="text-[10px]">Founders</span>
+        </a>
+        <button onClick={() => setUserMenuOpen(!userMenuOpen)} className={`flex flex-col items-center gap-0.5 px-3 py-1 rounded-lg ${isDark ? "text-neutral-400" : "text-neutral-500"}`}>
+          {userAvatar
+            ? <img src={userAvatar} alt={userName} className="w-6 h-6 rounded-full" />
+            : <div className="w-6 h-6 rounded-full bg-gradient-to-br from-blue-500 via-purple-500 to-pink-400 flex items-center justify-center text-white text-[11px] font-semibold">{userInitial}</div>
+          }
+          <span className="text-[10px]">Profile</span>
+        </button>
+      </div>
+
+      {/* Mobile user menu */}
+      {userMenuOpen && (
+        <div className={`md:hidden fixed bottom-16 right-2 z-50 w-48 rounded-xl overflow-hidden shadow-2xl ${isDark ? "bg-[#1a1a1a] border border-white/10" : "bg-white border border-black/10"}`}>
+          <div className={`px-3 py-2.5 text-[11px] truncate ${isDark ? "text-neutral-500 border-b border-white/5" : "text-neutral-500 border-b border-black/5"}`}>{userEmail}</div>
+          <a href="/profile" className={`block px-3 py-2.5 text-[13px] ${isDark ? "hover:bg-white/5 text-neutral-300" : "hover:bg-black/5 text-neutral-700"}`}>Edit profile</a>
+          <button onClick={() => { setTheme(isDark ? "light" : "dark"); setUserMenuOpen(false); }} className={`w-full text-left px-3 py-2.5 text-[13px] ${isDark ? "hover:bg-white/5 text-neutral-300" : "hover:bg-black/5 text-neutral-700"}`}>{isDark ? "Light mode" : "Dark mode"}</button>
+          <button onClick={signOut} className={`w-full text-left px-3 py-2.5 text-[13px] ${isDark ? "hover:bg-white/5 text-red-400" : "hover:bg-black/5 text-red-600"}`}>Sign out</button>
+        </div>
+      )}
+
+      <main className="flex-1 flex flex-col min-w-0 relative pb-16 md:pb-0">
         
 
         {isEmpty ? (
@@ -950,7 +992,7 @@ export default function Home() {
                   <div
                     key={task.id}
                     onClick={() => toggleTask(task.id, !task.done)}
-                    className={`flex items-start gap-3 p-3 rounded-xl cursor-pointer transition-all ${isDark ? "bg-white/5 hover:bg-white/8" : "bg-neutral-50 hover:bg-neutral-100"}`}
+                    className={`flex items-start gap-3 p-3 rounded-xl cursor-pointer transition-all ${isDark ? "bg-white/5 hover:bg-white/10" : "bg-neutral-50 hover:bg-neutral-100"}`}
                     style={{ backdropFilter: "blur(10px)" }}
                   >
                     {/* Checkbox */}
