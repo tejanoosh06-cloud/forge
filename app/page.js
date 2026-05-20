@@ -825,23 +825,23 @@ export default function Home() {
                         <div className="flex items-center gap-1.5">
                           <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 12 }}>
                           <div style={{ position: "relative", width: 64, height: 64, display: "flex", alignItems: "center", justifyContent: "center" }}>
-                            {[80, 95, 110].map((size, i) => (
-                              <div key={i} style={{ position: "absolute", width: size, height: size, borderRadius: "50%", border: "1px solid rgba(100,200,255,0.08)", animation: `ringExpand 2.4s ease-out ${i * 0.4}s infinite` }} />
+                            {[72, 88, 106].map((size, i) => (
+                              <div key={i} style={{ position: "absolute", width: size, height: size, borderRadius: "50%", border: `1px solid rgba(255,255,255,${0.06 - i * 0.015})`, animation: `ringExpand 2.8s ease-out ${i * 0.5}s infinite` }} />
                             ))}
-                            <div style={{ width: 52, height: 52, borderRadius: "50%", background: "radial-gradient(circle at 30% 28%, rgba(160,220,255,0.9) 0%, transparent 40%), radial-gradient(circle at 50% 50%, #1a6fa8 20%, #071e3d 100%)", boxShadow: "0 0 20px rgba(60,160,255,0.4), 0 0 40px rgba(60,160,255,0.15)", animation: "coreRotate 4s ease-in-out infinite", position: "relative" }}>
-                              <div style={{ position: "absolute", top: 7, left: 9, width: 15, height: 8, borderRadius: "50%", background: "rgba(220,240,255,0.55)", filter: "blur(3px)", animation: "shimmerFloat 3s ease-in-out infinite" }} />
+                            <div style={{ width: 52, height: 52, borderRadius: "50%", background: "radial-gradient(circle at 32% 28%, #ffffff 0%, #d4d4d4 40%, #888888 100%)", boxShadow: "0 0 0 8px rgba(255,255,255,0.04), 0 0 20px rgba(255,255,255,0.35), 0 0 45px rgba(255,255,255,0.15), 0 0 80px rgba(255,255,255,0.06)", animation: "coreRotate 5s ease-in-out infinite", position: "relative" }}>
+                              <div style={{ position: "absolute", top: 8, left: 10, width: 14, height: 7, borderRadius: "50%", background: "rgba(255,255,255,0.7)", filter: "blur(3px)", animation: "shimmerFloat 3.5s ease-in-out infinite" }} />
                             </div>
                           </div>
                           <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
                             <div style={{ display: "flex", alignItems: "center", gap: 3, height: 18 }}>
                               {[0,0.1,0.2,0.1,0].map((delay, i) => (
-                                <div key={i} style={{ width: 2, borderRadius: 10, background: "rgba(100,200,255,0.5)", animation: `barWave 1.4s ease-in-out ${delay}s infinite` }} />
+                                <div key={i} style={{ width: 2, borderRadius: 10, background: "rgba(255,255,255,0.35)", animation: `barWave 1.4s ease-in-out ${delay}s infinite` }} />
                               ))}
                             </div>
-                            <span style={{ fontSize: 12, color: "rgba(100,200,255,0.7)", letterSpacing: "0.05em", animation: "labelPulse 2.4s infinite" }}>thinking...</span>
+                            <span style={{ fontSize: 12, color: "rgba(255,255,255,0.5)", letterSpacing: "0.08em", fontWeight: 400, animation: "labelPulse 2.8s infinite" }}>thinking...</span>
                             <div style={{ display: "flex", alignItems: "center", gap: 3, height: 18 }}>
                               {[0.2,0.1,0,0.1,0.2].map((delay, i) => (
-                                <div key={i} style={{ width: 2, borderRadius: 10, background: "rgba(100,200,255,0.5)", animation: `barWave 1.4s ease-in-out ${delay}s infinite` }} />
+                                <div key={i} style={{ width: 2, borderRadius: 10, background: "rgba(255,255,255,0.35)", animation: `barWave 1.4s ease-in-out ${delay}s infinite` }} />
                               ))}
                             </div>
                           </div>
