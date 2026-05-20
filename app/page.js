@@ -692,25 +692,11 @@ export default function Home() {
         ${isDark ? "border-r border-white/5 bg-[#0D0D0D]" : "border-r border-black/5 bg-[#F0EEE8]"}
       `}>
         <div className="w-64 md:w-56 h-full flex flex-col">
-          <div className="px-3 py-4 flex items-center justify-between">
-            <span className={`text-[11px] uppercase tracking-widest font-semibold ${isDark ? "text-neutral-500" : "text-neutral-400"}`}>Menu</span>
+          <div className="px-3 pt-4 pb-1 flex items-center justify-between">
+            <span className={`font-bold text-[15px] tracking-tight ${isDark ? "text-white" : "text-neutral-900"}`}>Lore AI<span className="text-orange-500">.</span></span>
           </div>
 
           <div className="px-3 pb-3 space-y-0.5">
-            <button onClick={newChat} className={`w-full flex items-center gap-2 px-3 py-2.5 rounded-lg text-[13px] font-medium transition-colors ${isDark ? "hover:bg-white/5 text-neutral-300 hover:text-neutral-100" : "hover:bg-black/5 text-neutral-700 hover:text-neutral-900"}`}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-              New chat
-            </button>
-            <a href="/founders" className={`w-full flex items-center gap-2 px-3 py-2.5 rounded-lg text-[13px] font-medium transition-colors ${isDark ? "hover:bg-white/5 text-white" : "hover:bg-black/5 text-neutral-900"}`}>
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
-                <circle cx="9" cy="7" r="4"/>
-                <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
-                <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
-              </svg>
-              Founders
-            </a>
-
             {/* === Projects Section === */}
             <div className="mt-4">
               <div className={`px-3 pb-1 text-[10px] uppercase tracking-wider font-semibold ${isDark ? "text-neutral-400" : "text-neutral-500"}`}>Projects</div>
