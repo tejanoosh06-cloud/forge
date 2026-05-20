@@ -68,8 +68,8 @@ export default function LoginPage() {
           </div>
 
           <div className="fc fc-c">
-            <div className="fc-icon">🧠</div>
-            <div className="fc-txt">Answers in <span className="fc-o">seconds</span></div>
+            <div className="fc-icon">🚀</div>
+            <div className="fc-txt">From zero to <span className="fc-o">funded</span></div>
           </div>
 
           <div className="fc fc-d">
@@ -128,7 +128,7 @@ export default function LoginPage() {
         @keyframes f4{0%,100%{transform:translate(0,0)}50%{transform:translate(-32px,-25px)}}
 
         .nav{position:relative;z-index:20;display:flex;align-items:center;justify-content:space-between;padding:26px 44px;animation:fadeUp 0.8s ease forwards;opacity:0}
-        .logo{font-weight:800;font-size:16px;letter-spacing:-0.02em;color:#f0ece8}
+        .logo{font-weight:800;font-size:22px;letter-spacing:-0.02em;color:#f0ece8}
         .logo-dot{color:rgba(255,165,90,0.95)}
         .navlinks{display:flex;gap:28px}
         .navlinks a{font-size:12px;color:rgba(255,255,255,0.5);text-decoration:none;cursor:pointer;transition:color 0.2s;letter-spacing:0.01em}
@@ -207,35 +207,44 @@ export default function LoginPage() {
         @keyframes fadeUp{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
 
         @media(max-width:900px){
-          .body{grid-template-columns:1fr;padding:28px 24px 0;gap:32px}
+          .body{grid-template-columns:1fr;padding:32px 28px 0;gap:36px}
           .left{padding-right:0}
           .right{grid-template-columns:1fr 1fr}
           .stats{grid-template-columns:1fr 1fr}
-          .stat{padding:16px 24px}
+          .stat{padding:16px 28px}
         }
         @media(max-width:600px){
-          .nav{padding:16px 20px}
+          .nav{padding:20px 24px}
           .navlinks{display:none}
-          .nav-pricing{font-size:11px;padding:5px 12px}
-          .body{padding:20px 20px 0;gap:24px}
-          .h1{font-size:36px;line-height:1}
-          .rule{margin:18px 0}
-          .sub{font-size:13px;max-width:100%}
-          .btns{flex-direction:column;align-items:flex-start;gap:14px}
-          .btn{width:100%;justify-content:center}
-          .right{grid-template-columns:1fr 1fr;gap:8px}
-          .fc{padding:13px}
-          .fc-val{font-size:18px}
-          .fc-e{padding:13px}
-          .india-val{font-size:12px}
-          .india-lbl{font-size:7px}
-          .india-div{height:18px}
-          .stats{grid-template-columns:1fr 1fr;margin-top:20px}
-          .stat{padding:14px 20px}
-          .stat-n{font-size:16px}
-          .stat-l{font-size:8px}
-          .footer{padding:14px 20px;flex-direction:column;gap:10px;text-align:center}
-          .footer-r{justify-content:center}
+          .nav-pricing{font-size:12px;padding:6px 14px}
+          .logo{font-size:20px}
+          .body{padding:28px 24px 0;gap:32px}
+          .h1{font-size:40px;line-height:0.97}
+          .rule{margin:20px 0}
+          .sub{font-size:14px;max-width:100%;line-height:1.7}
+          .eyebrow{margin-bottom:18px}
+          .btns{gap:14px}
+          .btn{padding:13px 24px;font-size:14px}
+          .fine{font-size:11px}
+
+          .right{grid-template-columns:1fr;gap:10px}
+          .fc-a,.fc-b,.fc-c,.fc-d{padding:16px}
+          .fc-e{padding:16px}
+          .fc-val{font-size:20px}
+          .fc-b .fc-val{font-size:28px}
+          .av{width:22px;height:22px;font-size:9px}
+          .india-row{gap:0}
+          .india-val{font-size:14px}
+          .india-lbl{font-size:9px}
+          .india-div{height:24px}
+
+          .stats{grid-template-columns:1fr 1fr;margin-top:24px}
+          .stat{padding:16px 24px}
+          .stat-n{font-size:18px}
+          .stat-l{font-size:9px}
+          .footer{padding:16px 24px;flex-direction:column;gap:12px;text-align:center}
+          .footer-r{justify-content:center;gap:20px}
+          .footer-l,.footer-r a{font-size:11px}
         }
       `}</style>
     </div>
