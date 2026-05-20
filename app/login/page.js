@@ -48,21 +48,51 @@ export default function LoginPage() {
       </footer>
       <style jsx global>{`
         body { background: #000; }
-        .orb { position: absolute; border-radius: 50%; filter: blur(120px); will-change: transform; }
-        .orb-amber  { width: 700px; height: 700px; background: radial-gradient(circle, rgba(251,146,60,0.9) 0%, rgba(234,88,12,0.6) 40%, transparent 70%); top: -250px; left: -200px; animation: floatAmber 20s ease-in-out infinite; }
-        .orb-purple { width: 650px; height: 650px; background: radial-gradient(circle, rgba(109,40,150,0.8) 0%, rgba(76,29,149,0.6) 40%, transparent 70%); top: 10%; left: 15%; animation: floatPurple 26s ease-in-out infinite; }
-        .orb-coral  { width: 750px; height: 750px; background: radial-gradient(circle, rgba(239,68,68,0.8) 0%, rgba(220,38,38,0.5) 40%, transparent 70%); bottom: -250px; right: -200px; animation: floatCoral 22s ease-in-out infinite; }
-        .orb-pink   { width: 500px; height: 500px; background: radial-gradient(circle, rgba(236,72,153,0.6) 0%, rgba(219,39,119,0.3) 40%, transparent 70%); top: 20%; right: 5%; animation: floatPink 28s ease-in-out infinite; }
-        @media (max-width: 640px) {
-          .orb-amber  { width: 400px; height: 400px; top: -150px; left: -150px; }
-          .orb-purple { width: 380px; height: 380px; }
-          .orb-coral  { width: 420px; height: 420px; bottom: -150px; right: -150px; }
-          .orb-pink   { width: 300px; height: 300px; }
+        .orb { position: absolute; border-radius: 50%; filter: blur(130px); will-change: transform; }
+
+        /* TOP-LEFT: orange — exactly like logo */
+        .orb-amber {
+          width: 750px; height: 750px;
+          background: radial-gradient(circle, rgba(255,140,20,1) 0%, rgba(220,90,0,0.7) 45%, transparent 70%);
+          top: -280px; left: -220px;
+          animation: floatAmber 18s ease-in-out infinite;
         }
-        @keyframes floatAmber  { 0%,100%{transform:translate(0,0) scale(1)} 33%{transform:translate(60px,40px) scale(1.08)} 66%{transform:translate(20px,70px) scale(0.95)} }
-        @keyframes floatPurple { 0%,100%{transform:translate(0,0)} 33%{transform:translate(-50px,60px)} 66%{transform:translate(40px,30px)} }
-        @keyframes floatCoral  { 0%,100%{transform:translate(0,0) scale(1)} 33%{transform:translate(-70px,-50px) scale(1.06)} 66%{transform:translate(-30px,-80px) scale(0.97)} }
-        @keyframes floatPink   { 0%,100%{transform:translate(0,0)} 33%{transform:translate(40px,50px)} 66%{transform:translate(-20px,30px)} }
+
+        /* CENTER: muted dark purple bridge — subtle, not dominant */
+        .orb-purple {
+          width: 500px; height: 500px;
+          background: radial-gradient(circle, rgba(80,30,100,0.5) 0%, rgba(50,15,70,0.3) 50%, transparent 70%);
+          top: 20%; left: 20%;
+          animation: floatPurple 24s ease-in-out infinite;
+        }
+
+        /* BOTTOM-RIGHT: coral red — exactly like logo */
+        .orb-coral {
+          width: 800px; height: 800px;
+          background: radial-gradient(circle, rgba(240,80,60,0.9) 0%, rgba(200,40,40,0.6) 40%, transparent 70%);
+          bottom: -280px; right: -220px;
+          animation: floatCoral 20s ease-in-out infinite;
+        }
+
+        /* RIGHT: faint white/grey glow — matches logo right side */
+        .orb-pink {
+          width: 550px; height: 550px;
+          background: radial-gradient(circle, rgba(200,190,190,0.25) 0%, rgba(160,150,150,0.12) 50%, transparent 70%);
+          top: 15%; right: -80px;
+          animation: floatPink 26s ease-in-out infinite;
+        }
+
+        @media (max-width: 640px) {
+          .orb-amber  { width: 420px; height: 420px; top: -160px; left: -160px; }
+          .orb-purple { width: 300px; height: 300px; }
+          .orb-coral  { width: 440px; height: 440px; bottom: -160px; right: -160px; }
+          .orb-pink   { width: 280px; height: 280px; }
+        }
+
+        @keyframes floatAmber  { 0%,100%{transform:translate(0,0) scale(1)} 33%{transform:translate(50px,35px) scale(1.06)} 66%{transform:translate(15px,60px) scale(0.97)} }
+        @keyframes floatPurple { 0%,100%{transform:translate(0,0)} 33%{transform:translate(-30px,50px)} 66%{transform:translate(30px,20px)} }
+        @keyframes floatCoral  { 0%,100%{transform:translate(0,0) scale(1)} 33%{transform:translate(-60px,-45px) scale(1.05)} 66%{transform:translate(-25px,-70px) scale(0.96)} }
+        @keyframes floatPink   { 0%,100%{transform:translate(0,0)} 33%{transform:translate(30px,40px)} 66%{transform:translate(-15px,25px)} }
         @keyframes fadeIn { from{opacity:0;transform:translateY(20px)} to{opacity:1;transform:translateY(0)} }
         .fade-in { opacity: 0; animation: fadeIn 1s cubic-bezier(0.16,1,0.3,1) forwards; }
       `}</style>
