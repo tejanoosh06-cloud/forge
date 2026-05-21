@@ -967,19 +967,32 @@ export default function Home() {
         .markdown-body th, .markdown-body td { padding: 0.5rem 0.75rem; text-align: left; }
       `}</style>
 
-      {/* Priority Box — right panel */}
+      {/* Priority Box — floating 3D card */}
       {user && (
-        <div className="hidden lg:flex flex-col w-64 shrink-0 h-screen sticky top-0 overflow-y-auto" style={{background: "rgba(6,6,10,0.85)", backdropFilter: "blur(24px)", borderLeft: "0.5px solid rgba(255,255,255,0.06)"}}>
-          <div className="p-4">
+        <div style={{
+          position:"fixed", top:20, right:20, zIndex:30,
+          width:240,
+          background:"rgba(10,10,14,0.75)",
+          backdropFilter:"blur(32px)",
+          WebkitBackdropFilter:"blur(32px)",
+          border:"0.5px solid rgba(255,255,255,0.1)",
+          borderRadius:20,
+          boxShadow:"0 8px 40px rgba(0,0,0,0.5), 0 0 0 0.5px rgba(255,255,255,0.05) inset, 0 1px 0 rgba(255,255,255,0.08) inset",
+          transform:"perspective(800px) rotateX(1deg)",
+          transformOrigin:"top center",
+          animation:"boxFloat 5s ease-in-out infinite",
+          overflow:"hidden"
+        }} className="hidden lg:block">
+          <div style={{padding:"14px 16px"}}>
             {/* Header */}
-            <div className="flex items-center justify-between mb-4 mt-2">
-              <div className="flex items-center gap-2">
-                <div style={{width:6,height:6,borderRadius:"50%",background:"rgba(255,165,90,0.9)",boxShadow:"0 0 8px rgba(255,165,90,0.6)",animation:"priorityPulse 2s ease-in-out infinite"}} />
-                <span style={{fontSize:11,fontWeight:600,letterSpacing:"0.1em",textTransform:"uppercase",color:"rgba(255,255,255,0.4)"}}>Priorities</span>
+            <div style={{display:"flex",alignItems:"center",justifyContent:"space-between",marginBottom:12}}>
+              <div style={{display:"flex",alignItems:"center",gap:7}}>
+                <div style={{width:6,height:6,borderRadius:"50%",background:"rgba(255,165,90,0.95)",boxShadow:"0 0 8px rgba(255,165,90,0.7)",animation:"priorityPulse 2s ease-in-out infinite",flexShrink:0}} />
+                <span style={{fontSize:10,fontWeight:600,letterSpacing:"0.12em",textTransform:"uppercase",color:"rgba(255,255,255,0.45)"}}>Priorities</span>
               </div>
-              <button onClick={loadPriorities} style={{fontSize:10,color:"rgba(255,255,255,0.25)",background:"none",border:"none",cursor:"pointer",padding:"2px 6px",borderRadius:6,transition:"color 0.2s"}}
+              <button onClick={loadPriorities} style={{fontSize:12,color:"rgba(255,255,255,0.2)",background:"none",border:"none",cursor:"pointer",padding:"2px 6px",borderRadius:6,transition:"color 0.2s"}}
                 onMouseEnter={e=>e.currentTarget.style.color="rgba(255,255,255,0.6)"}
-                onMouseLeave={e=>e.currentTarget.style.color="rgba(255,255,255,0.25)"}
+                onMouseLeave={e=>e.currentTarget.style.color="rgba(255,255,255,0.2)"}
               >↻</button>
             </div>
 
@@ -1040,13 +1053,13 @@ export default function Home() {
 
             {/* Add manual priority */}
             <button onClick={async () => {
-              const t = prompt("Add a priority:");
+              const t = window.prompt("Add a priority:");
               if (t?.trim()) {
                 const res = await fetch("/api/priorities", { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({title:t.trim(),urgency:"high"}) });
                 const d = await res.json();
                 if (d.priority) setPriorities(prev => [d.priority, ...prev]);
               }
-            }} style={{width:"100%",marginTop:14,padding:"8px",borderRadius:10,fontSize:12,color:"rgba(255,255,255,0.25)",background:"rgba(255,255,255,0.02)",border:"0.5px solid rgba(255,255,255,0.06)",cursor:"pointer",transition:"all 0.2s",fontFamily:"inherit"}}
+            }} style={{width:"100%",marginTop:12,padding:"7px",borderRadius:9,fontSize:11,color:"rgba(255,255,255,0.25)",background:"rgba(255,255,255,0.02)",border:"0.5px solid rgba(255,255,255,0.06)",cursor:"pointer",transition:"all 0.2s",fontFamily:"inherit"}}
               onMouseEnter={e=>{e.currentTarget.style.color="rgba(255,255,255,0.5)";e.currentTarget.style.borderColor="rgba(255,255,255,0.12)"}}
               onMouseLeave={e=>{e.currentTarget.style.color="rgba(255,255,255,0.25)";e.currentTarget.style.borderColor="rgba(255,255,255,0.06)"}}
             >+ Add priority</button>
@@ -1054,6 +1067,7 @@ export default function Home() {
             <style>{`
               @keyframes priorityPulse { 0%,100%{opacity:0.6;box-shadow:0 0 6px rgba(255,165,90,0.4)} 50%{opacity:1;box-shadow:0 0 12px rgba(255,165,90,0.8)} }
               @keyframes cardFloat { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-3px)} }
+              @keyframes boxFloat { 0%,100%{transform:perspective(800px) rotateX(1deg) translateY(0)} 50%{transform:perspective(800px) rotateX(1deg) translateY(-4px)} }
             `}</style>
 
 
@@ -1061,7 +1075,6 @@ export default function Home() {
         </div>
       )}
 
-      {/* Show panel button when hidden */}
       {user && TASKS_FEATURE_ENABLED && !showTaskPanel && (
         <button
           onClick={() => setShowTaskPanel(true)}
