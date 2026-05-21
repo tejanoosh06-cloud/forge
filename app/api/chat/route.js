@@ -530,7 +530,18 @@ export async function POST(request) {
     }
     // ===== END PRO+ TIER CHECK =====
 
-    let basePrompt = useFullPrompt ? FORGE_FULL_PROMPT : FORGE_LITE_PROMPT;
+    // TIER SYSTEM:
+    // Free: lite prompt for startup queries too (saves tokens, good answers)
+    // Pro: full prompt (great answers)
+    // Pro+: full prompt + enhancement (best answers)
+    let basePrompt;
+    if (useProPlus) {
+      basePrompt = FORGE_FULL_PROMPT; // Pro+ gets full
+    } else if (userIsPro) {
+      basePrompt = useFullPrompt ? FORGE_FULL_PROMPT : FORGE_LITE_PROMPT; // Pro gets full on startup queries
+    } else {
+      basePrompt = FORGE_LITE_PROMPT; // Free always gets lite (tokens saved)
+    }
 
     // === Inject project context if this chat belongs to a project ===
     try {
@@ -560,7 +571,18 @@ export async function POST(request) {
     }
     let founderContext = "";
 
-    if (user && useFullPrompt) {
+    // Fetch profile including is_pro
+    let userIsPro = false;
+    if (user) {
+      const { data: proCheck } = await supabase
+        .from("profiles")
+        .select("is_pro, user_number")
+        .eq("id", user.id)
+        .single();
+      userIsPro = proCheck?.is_pro || false;
+    }
+
+    if (user && (userIsPro || useProPlus) && useFullPrompt) {
       const { data: profile } = await supabase
         .from("profiles")
         .select("full_name, company_name, sector, stage, city, what_building")
@@ -587,7 +609,7 @@ export async function POST(request) {
         .select("memory_text, created_at")
         .eq("user_id", user.id)
         .order("created_at", { ascending: false })
-        .limit(5);
+        .limit(useProPlus ? 6 : userIsPro ? 4 : 2);
 
       if (memories && memories.length > 0) {
         const memoryLines = memories.map((m, i) => `${i + 1}. ${m.memory_text}`).join("\n");
@@ -639,9 +661,9 @@ export async function POST(request) {
         model: "sarvam-m",
         messages: sarvamMessages,
         stream: false,
-        max_tokens: useProPlus ? 2000 : (isHeavyAnalysisQuery(lastUserMsg) ? 2000 : (useFullPrompt ? 1800 : 1000)),
-        reasoning_effort: useProPlus ? "medium" : (isHeavyAnalysisQuery(lastUserMsg) ? "medium" : "low"),
-        temperature: useProPlus ? 0.6 : 0.7,
+        max_tokens: useProPlus ? 1400 : userIsPro ? 1000 : 600,
+        reasoning_effort: useProPlus ? "medium" : userIsPro ? "low" : "low",
+        temperature: useProPlus ? 0.6 : userIsPro ? 0.65 : 0.7,
       }),
     });
 
