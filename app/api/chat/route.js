@@ -422,6 +422,10 @@ export async function POST(request) {
       recentMessages.shift();
     }
 
+    // Tier message history by plan
+    const msgLimit = useProPlus ? 12 : userIsPro ? 8 : 4;
+    const trimmedMessages = messages.slice(-msgLimit);
+
     // Ensure messages alternate starting with user
     const fixedMessages = [];
     let lastRole = null;
