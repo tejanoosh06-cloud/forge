@@ -13,26 +13,29 @@ export async function GET(request) {
     if (!error && data?.user) {
       const user = data.user;
 
-      // Check if profile exists and onboarding is complete
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("full_name, what_building, user_number")
-        .eq("id", user.id)
-        .single();
+      try {
+        // Upsert profile
+        await supabase.from("profiles").upsert({
+          id: user.id,
+          email: user.email,
+          avatar_url: user.user_metadata?.avatar_url || null,
+          full_name: user.user_metadata?.full_name || user.user_metadata?.name || null,
+          updated_at: new Date().toISOString(),
+        }, { onConflict: "id", ignoreDuplicates: false });
 
-      // If no profile or missing key fields → onboarding
-      if (!profile || !profile.full_name || !profile.what_building) {
-        // Create bare profile if doesn't exist
-        if (!profile) {
-          await supabase.from("profiles").upsert({
-            id: user.id,
-            email: user.email,
-            avatar_url: user.user_metadata?.avatar_url || null,
-            full_name: user.user_metadata?.full_name || user.user_metadata?.name || null,
-            updated_at: new Date().toISOString(),
-          });
+        // Check if onboarding complete
+        const { data: profile } = await supabase
+          .from("profiles")
+          .select("full_name, what_building")
+          .eq("id", user.id)
+          .single();
+
+        if (!profile?.full_name || !profile?.what_building) {
+          return NextResponse.redirect(`${origin}/onboarding`);
         }
-        return NextResponse.redirect(`${origin}/onboarding`);
+      } catch (e) {
+        console.error("Profile upsert error:", e);
+        // Don't block login if profile fails
       }
 
       return NextResponse.redirect(`${origin}${next}`);
