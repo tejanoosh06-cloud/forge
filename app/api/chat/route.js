@@ -226,7 +226,7 @@ function isHeavyAnalysisQuery(text) {
 
 export async function POST(request) {
   try {
-    const { messages, pro_plus_requested } = await request.json();
+    const { messages, pro_plus_requested, chat_id } = await request.json();
     if (!messages || !Array.isArray(messages)) {
       return NextResponse.json({ error: "Invalid request" }, { status: 400 });
     }
@@ -420,6 +420,20 @@ export async function POST(request) {
     // Ensure the conversation starts with a user message (Sarvam requirement)
     while (recentMessages.length > 0 && recentMessages[0].role !== "user") {
       recentMessages.shift();
+    }
+
+    // Ensure messages alternate starting with user
+    const fixedMessages = [];
+    let lastRole = null;
+    for (const msg of trimmedMessages) {
+      if (msg.role === lastRole) continue; // skip consecutive same role
+      if (fixedMessages.length === 0 && msg.role !== 'user') continue; // must start with user
+      fixedMessages.push(msg);
+      lastRole = msg.role;
+    }
+    // Must end with user message
+    while (fixedMessages.length > 0 && fixedMessages[fixedMessages.length-1].role !== 'user') {
+      fixedMessages.pop();
     }
 
     const sarvamMessages = [
