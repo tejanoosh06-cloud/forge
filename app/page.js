@@ -703,9 +703,9 @@ export default function Home() {
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
               Founders
             </a>
-            <a href="/community" style={{width:"100%",display:"flex",alignItems:"center",gap:8,padding:"9px 12px",borderRadius:10,fontSize:13,color:"rgba(255,165,90,0.85)",background:"rgba(255,165,90,0.05)",border:"0.5px solid rgba(255,165,90,0.12)",cursor:"pointer",textDecoration:"none",transition:"all 0.2s"}}
-              onMouseEnter={e=>{e.currentTarget.style.color="rgba(255,165,90,1)";e.currentTarget.style.background="rgba(255,165,90,0.1)"}}
-              onMouseLeave={e=>{e.currentTarget.style.color="rgba(255,165,90,0.85)";e.currentTarget.style.background="rgba(255,165,90,0.05)"}}
+            <a href="/community" style={{width:"100%",display:"flex",alignItems:"center",gap:8,padding:"9px 12px",borderRadius:10,fontSize:13,color:"rgba(255,255,255,0.75)",background:"none",border:"none",cursor:"pointer",textDecoration:"none",transition:"all 0.2s"}}
+              onMouseEnter={e=>{e.currentTarget.style.color="rgba(255,255,255,0.95)";e.currentTarget.style.background="rgba(255,255,255,0.04)"}}
+              onMouseLeave={e=>{e.currentTarget.style.color="rgba(255,255,255,0.75)";e.currentTarget.style.background="none"}}
             >
               <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
               Community
@@ -972,12 +972,12 @@ export default function Home() {
         <div style={{
           position:"fixed", top:20, right:20, zIndex:30,
           width:240,
-          background:"rgba(18,12,8,0.82)",
+          background:"rgba(14,12,20,0.80)",
           backdropFilter:"blur(32px)",
           WebkitBackdropFilter:"blur(32px)",
-          border:"0.5px solid rgba(255,165,90,0.25)",
+          border:"0.5px solid rgba(190,165,240,0.18)",
           borderRadius:20,
-          boxShadow:"0 8px 40px rgba(0,0,0,0.6), 0 0 30px rgba(255,165,90,0.06), 0 0 0 0.5px rgba(255,165,90,0.08) inset, 0 1px 0 rgba(255,255,255,0.1) inset",
+          boxShadow:"0 8px 40px rgba(0,0,0,0.5), 0 0 24px rgba(190,165,240,0.05), 0 0 0 0.5px rgba(190,165,240,0.06) inset, 0 1px 0 rgba(255,255,255,0.07) inset",
           transform:"perspective(800px) rotateX(1deg)",
           transformOrigin:"top center",
           animation:"boxFloat 5s ease-in-out infinite",
