@@ -6,22 +6,38 @@ export async function GET(request) {
   const code = searchParams.get("code");
   const next = searchParams.get("next") ?? "/";
 
-  console.log("=== AUTH CALLBACK HIT ===");
-  console.log("Code received:", code ? "YES" : "NO");
-
   if (code) {
     const supabase = await createClient();
     const { data, error } = await supabase.auth.exchangeCodeForSession(code);
 
-    console.log("Error from Supabase:", error ? error.message : "none");
-    console.log("User email:", data?.user?.email || "none");
+    if (!error && data?.user) {
+      const user = data.user;
 
-    if (!error) {
-      console.log("=== SUCCESS ===");
+      // Check if profile exists and onboarding is complete
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("full_name, what_building, user_number")
+        .eq("id", user.id)
+        .single();
+
+      // If no profile or missing key fields → onboarding
+      if (!profile || !profile.full_name || !profile.what_building) {
+        // Create bare profile if doesn't exist
+        if (!profile) {
+          await supabase.from("profiles").upsert({
+            id: user.id,
+            email: user.email,
+            avatar_url: user.user_metadata?.avatar_url || null,
+            full_name: user.user_metadata?.full_name || user.user_metadata?.name || null,
+            updated_at: new Date().toISOString(),
+          });
+        }
+        return NextResponse.redirect(`${origin}/onboarding`);
+      }
+
       return NextResponse.redirect(`${origin}${next}`);
     }
   }
 
-  console.log("=== FAILED ===");
   return NextResponse.redirect(`${origin}/auth/error`);
 }
