@@ -1056,28 +1056,7 @@ export default function Home() {
               @keyframes cardFloat { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-3px)} }
             `}</style>
 
-            {/* old task_text placeholder */}
-            {false && tasks.map(task => (
-              <div key={task.id}>
-                <p>{task.task_text
-                      </p>
-                      <span className={`inline-block mt-1.5 text-[10px] font-medium px-2 py-0.5 rounded-full ${
-                        task.priority === "high" ? "bg-red-500/15 text-red-400" :
-                        task.priority === "med" ? "bg-orange-500/15 text-orange-400" :
-                        "bg-green-500/15 text-green-400"
-                      }`}>
-                        {task.priority === "high" ? "High" : task.priority === "med" ? "Medium" : "Low"}
-                      </span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
 
-            {/* Footer */}
-            <p className={`text-[10px] mt-4 text-center ${isDark ? "text-neutral-700" : "text-neutral-400"}`}>
-              Auto-extracted from your chats
-            </p>
           </div>
         </div>
       )}
