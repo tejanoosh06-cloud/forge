@@ -500,6 +500,14 @@ export async function POST(request) {
     const lastUserMsg = messages.length > 0 ? messages[messages.length - 1].content : "";
     const useFullPrompt = isStartupQuery(lastUserMsg);
 
+    // Fetch is_pro early so it's available for tiering
+    let userIsPro = false;
+    if (user) {
+      const { data: proCheck } = await supabase
+        .from("profiles").select("is_pro").eq("id", user.id).single();
+      userIsPro = proCheck?.is_pro || false;
+    }
+
     // ===== PRO+ TIER CHECK =====
     let useProPlus = false;
     if (pro_plus_requested && user) {
@@ -570,17 +578,6 @@ export async function POST(request) {
       basePrompt += FORGE_PRO_PLUS_ENHANCEMENT;
     }
     let founderContext = "";
-
-    // Fetch profile including is_pro
-    let userIsPro = false;
-    if (user) {
-      const { data: proCheck } = await supabase
-        .from("profiles")
-        .select("is_pro, user_number")
-        .eq("id", user.id)
-        .single();
-      userIsPro = proCheck?.is_pro || false;
-    }
 
     if (user && (userIsPro || useProPlus) && useFullPrompt) {
       const { data: profile } = await supabase
