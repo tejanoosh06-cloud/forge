@@ -340,6 +340,30 @@ export async function POST(request) {
     // ===== END PRO+ TIER CHECK =====
 
     let basePrompt = useFullPrompt ? FORGE_FULL_PROMPT : FORGE_LITE_PROMPT;
+
+    // === Inject project context if this chat belongs to a project ===
+    try {
+      if (chat_id) {
+        const { data: chatRow } = await supabase
+          .from("chats")
+          .select("project_id")
+          .eq("id", chat_id)
+          .maybeSingle();
+        if (chatRow?.project_id) {
+          const { data: project } = await supabase
+            .from("projects")
+            .select("name, description, emoji")
+            .eq("id", chatRow.project_id)
+            .maybeSingle();
+          if (project) {
+            const projectBlock = `\n\n[PROJECT CONTEXT]\nProject: ${project.emoji || "📁"} ${project.name}${project.description ? `\nAbout: ${project.description}` : ""}\n\nThe user is working inside this project. Tailor every answer to this specific project's stage, goals, and constraints. Remember details from previous chats in this project when relevant.`;
+            basePrompt += projectBlock;
+          }
+        }
+      }
+    } catch (projectErr) {
+      console.error("[chat] project context injection failed:", projectErr);
+    }
     if (useProPlus && useFullPrompt) {
       basePrompt += FORGE_PRO_PLUS_ENHANCEMENT;
     }
