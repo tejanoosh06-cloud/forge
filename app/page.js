@@ -209,6 +209,14 @@ export default function Home() {
       const { data: { user } } = await supabase.auth.getUser();
       setUser(user);
       if (user) {
+        // Check onboarding
+        const profileRes = await fetch("/api/profile");
+        const profileData = await profileRes.json();
+        const profile = profileData.profile;
+        if (!profile || !profile.full_name || !profile.what_building) {
+          window.location.href = "/onboarding";
+          return;
+        }
         const res = await fetch("/api/chats");
         const data = await res.json();
         setChats(data.chats || []);
