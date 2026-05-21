@@ -1,8 +1,5 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import Anthropic from "@anthropic-ai/sdk";
-
-const client = new Anthropic();
 
 export async function POST(request) {
   const supabase = await createClient();
@@ -13,29 +10,34 @@ export async function POST(request) {
   if (!message || message.length < 30) return NextResponse.json({ priorities: [] });
 
   try {
-    const response = await client.messages.create({
-      model: "claude-haiku-4-5-20251001",
-      max_tokens: 400,
-      messages: [{
-        role: "user",
-        content: `Extract HIGH PRIORITY action items from this AI response to a founder. 
-Only extract things that are urgent, critical, or explicitly marked as the most important next step.
-Return JSON only — no markdown, no explanation:
-{"priorities": [{"title": "short action item under 60 chars", "urgency": "high|medium"}]}
-Return empty array if nothing urgent found.
-Max 2 items.
-
-AI response:
-${message.slice(0, 800)}`
-      }]
+    const res = await fetch("https://api.sarvam.ai/v1/chat/completions", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "api-subscription-key": process.env.SARVAM_API_KEY,
+      },
+      body: JSON.stringify({
+        model: "sarvam-m",
+        max_tokens: 300,
+        messages: [
+          {
+            role: "system",
+            content: "You extract high priority action items from AI responses. Return only valid JSON, no markdown, no explanation."
+          },
+          {
+            role: "user",
+            content: `Extract HIGH PRIORITY action items from this AI response to a founder. Only extract urgent or critical next steps. Return JSON only: {"priorities": [{"title": "short action under 60 chars", "urgency": "high"}]}. Return empty array if nothing urgent. Max 2 items.\n\nAI response:\n${message.slice(0, 600)}`
+          }
+        ]
+      })
     });
 
-    const text = response.content[0]?.text || "{}";
+    const data = await res.json();
+    const text = data?.choices?.[0]?.message?.content || "{}";
     const clean = text.replace(/```json|```/g, "").trim();
     const parsed = JSON.parse(clean);
     const items = parsed.priorities || [];
 
-    // Save to DB
     for (const item of items.slice(0, 2)) {
       if (item.title?.trim()) {
         await supabase.from("priorities").insert({
