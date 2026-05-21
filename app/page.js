@@ -57,6 +57,34 @@ export default function Home() {
   const [tasksLoading, setTasksLoading] = useState(false);
   const [showTaskPanel, setShowTaskPanel] = useState(false);
   const TASKS_FEATURE_ENABLED = false; // TODO: re-enable when /api/tasks is stable
+  const [priorities, setPriorities] = useState([]);
+  const [prioritiesLoading, setPrioritiesLoading] = useState(false);
+
+  const loadPriorities = async () => {
+    try {
+      const res = await fetch("/api/priorities");
+      const data = await res.json();
+      if (data.priorities) setPriorities(data.priorities);
+    } catch {}
+  };
+
+  const togglePriority = async (id, done) => {
+    setPriorities(prev => prev.map(p => p.id === id ? { ...p, done } : p).filter(p => !p.done));
+    await fetch("/api/priorities", {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id, done }),
+    });
+  };
+
+  const deletePriority = async (id) => {
+    setPriorities(prev => prev.filter(p => p.id !== id));
+    await fetch("/api/priorities", {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id }),
+    });
+  };
 
   // === PROJECTS STATE ===
   const [projects, setProjects] = useState([]);
@@ -223,6 +251,7 @@ export default function Home() {
         checkProPlusAvailability();
         loadTasks();
         loadProjects();
+        loadPriorities();
       }
     }
     init();
@@ -938,17 +967,20 @@ export default function Home() {
         .markdown-body th, .markdown-body td { padding: 0.5rem 0.75rem; text-align: left; }
       `}</style>
 
-      {/* Today's Focus — right panel */}
-      {user && TASKS_FEATURE_ENABLED && showTaskPanel && (
-        <div className={`hidden lg:flex flex-col w-72 shrink-0 h-screen sticky top-0 border-l overflow-y-auto ${isDark ? "border-neutral-800 bg-neutral-950/80" : "border-neutral-200 bg-white/80"}`} style={{ backdropFilter: "blur(20px)" }}>
+      {/* Priority Box — right panel */}
+      {user && (
+        <div className="hidden lg:flex flex-col w-64 shrink-0 h-screen sticky top-0 overflow-y-auto" style={{background: "rgba(6,6,10,0.85)", backdropFilter: "blur(24px)", borderLeft: "0.5px solid rgba(255,255,255,0.06)"}}>
           <div className="p-4">
             {/* Header */}
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center justify-between mb-4 mt-2">
               <div className="flex items-center gap-2">
-                <div className="w-2 h-2 rounded-full bg-orange-500" />
-                <span className={`text-[13px] font-medium ${isDark ? "text-white" : "text-neutral-900"}`}>Today's Focus</span>
+                <div style={{width:6,height:6,borderRadius:"50%",background:"rgba(255,165,90,0.9)",boxShadow:"0 0 8px rgba(255,165,90,0.6)",animation:"priorityPulse 2s ease-in-out infinite"}} />
+                <span style={{fontSize:11,fontWeight:600,letterSpacing:"0.1em",textTransform:"uppercase",color:"rgba(255,255,255,0.4)"}}>Priorities</span>
               </div>
-              <button onClick={() => setShowTaskPanel(false)} className={`text-[11px] px-2 py-0.5 rounded-md ${isDark ? "text-neutral-500 hover:text-neutral-300" : "text-neutral-400 hover:text-neutral-600"}`}>hide</button>
+              <button onClick={loadPriorities} style={{fontSize:10,color:"rgba(255,255,255,0.25)",background:"none",border:"none",cursor:"pointer",padding:"2px 6px",borderRadius:6,transition:"color 0.2s"}}
+                onMouseEnter={e=>e.currentTarget.style.color="rgba(255,255,255,0.6)"}
+                onMouseLeave={e=>e.currentTarget.style.color="rgba(255,255,255,0.25)"}
+              >↻</button>
             </div>
 
             {/* Progress bar */}
@@ -967,33 +999,67 @@ export default function Home() {
               </div>
             )}
 
-            {/* Task list */}
-            {tasks.length === 0 ? (
-              <div className={`text-center py-8 ${isDark ? "text-neutral-600" : "text-neutral-400"}`}>
-                <div className="text-2xl mb-2">🎯</div>
-                <p className="text-[12px]">Tasks will appear here as you chat</p>
+            {/* Priority items */}
+            {priorities.length === 0 ? (
+              <div style={{textAlign:"center",padding:"32px 8px"}}>
+                <div style={{fontSize:28,marginBottom:10}}>🎯</div>
+                <p style={{fontSize:11,color:"rgba(255,255,255,0.25)",lineHeight:1.6}}>High priority actions will appear here as you chat with Lore</p>
               </div>
             ) : (
-              <div className="flex flex-col gap-2">
-                {tasks.map(task => (
-                  <div
-                    key={task.id}
-                    onClick={() => toggleTask(task.id, !task.done)}
-                    className={`flex items-start gap-3 p-3 rounded-xl cursor-pointer transition-all ${isDark ? "bg-white/5 hover:bg-white/10" : "bg-neutral-50 hover:bg-neutral-100"}`}
-                    style={{ backdropFilter: "blur(10px)" }}
-                  >
-                    {/* Checkbox */}
-                    <div className={`w-5 h-5 rounded-full border flex items-center justify-center shrink-0 mt-0.5 transition-all ${task.done ? "bg-green-500 border-green-500" : isDark ? "border-neutral-600" : "border-neutral-300"}`}>
-                      {task.done && (
-                        <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3">
-                          <polyline points="20 6 9 17 4 12" />
-                        </svg>
-                      )}
+              <div style={{display:"flex",flexDirection:"column",gap:8}}>
+                {priorities.map(p => (
+                  <div key={p.id} style={{
+                    background: p.urgency === "high" ? "rgba(255,165,90,0.06)" : "rgba(255,255,255,0.03)",
+                    border: p.urgency === "high" ? "0.5px solid rgba(255,165,90,0.2)" : "0.5px solid rgba(255,255,255,0.08)",
+                    borderRadius:12, padding:"12px 14px",
+                    animation:"cardFloat 4s ease-in-out infinite",
+                    animationDelay: `${Math.random()*2}s`
+                  }}>
+                    <div style={{display:"flex",alignItems:"flex-start",gap:10}}>
+                      <button onClick={() => togglePriority(p.id, true)} style={{
+                        width:18,height:18,borderRadius:"50%",flexShrink:0,marginTop:1,
+                        border: p.urgency === "high" ? "1.5px solid rgba(255,165,90,0.5)" : "1.5px solid rgba(255,255,255,0.2)",
+                        background:"none",cursor:"pointer",transition:"all 0.2s",display:"flex",alignItems:"center",justifyContent:"center"
+                      }}
+                        onMouseEnter={e=>{e.currentTarget.style.background="rgba(255,165,90,0.2)";e.currentTarget.style.borderColor="rgba(255,165,90,0.8)"}}
+                        onMouseLeave={e=>{e.currentTarget.style.background="none";e.currentTarget.style.borderColor=p.urgency==="high"?"rgba(255,165,90,0.5)":"rgba(255,255,255,0.2)"}}
+                      />
+                      <div style={{flex:1,minWidth:0}}>
+                        <p style={{fontSize:12,color:"rgba(255,255,255,0.75)",lineHeight:1.5,margin:0}}>{p.title}</p>
+                        {p.urgency === "high" && <span style={{fontSize:9,color:"rgba(255,165,90,0.7)",letterSpacing:"0.08em",textTransform:"uppercase",marginTop:4,display:"block"}}>High priority</span>}
+                      </div>
+                      <button onClick={() => deletePriority(p.id)} style={{background:"none",border:"none",cursor:"pointer",color:"rgba(255,255,255,0.15)",fontSize:14,padding:"0 2px",lineHeight:1,flexShrink:0,transition:"color 0.2s"}}
+                        onMouseEnter={e=>e.currentTarget.style.color="rgba(239,68,68,0.6)"}
+                        onMouseLeave={e=>e.currentTarget.style.color="rgba(255,255,255,0.15)"}
+                      >×</button>
                     </div>
-                    {/* Text */}
-                    <div className="flex-1 min-w-0">
-                      <p className={`text-[13px] leading-tight ${task.done ? "line-through opacity-40" : isDark ? "text-neutral-200" : "text-neutral-800"}`}>
-                        {task.task_text}
+                  </div>
+                ))}
+              </div>
+            )}
+
+            {/* Add manual priority */}
+            <button onClick={async () => {
+              const t = prompt("Add a priority:");
+              if (t?.trim()) {
+                const res = await fetch("/api/priorities", { method:"POST", headers:{"Content-Type":"application/json"}, body: JSON.stringify({title:t.trim(),urgency:"high"}) });
+                const d = await res.json();
+                if (d.priority) setPriorities(prev => [d.priority, ...prev]);
+              }
+            }} style={{width:"100%",marginTop:14,padding:"8px",borderRadius:10,fontSize:12,color:"rgba(255,255,255,0.25)",background:"rgba(255,255,255,0.02)",border:"0.5px solid rgba(255,255,255,0.06)",cursor:"pointer",transition:"all 0.2s",fontFamily:"inherit"}}
+              onMouseEnter={e=>{e.currentTarget.style.color="rgba(255,255,255,0.5)";e.currentTarget.style.borderColor="rgba(255,255,255,0.12)"}}
+              onMouseLeave={e=>{e.currentTarget.style.color="rgba(255,255,255,0.25)";e.currentTarget.style.borderColor="rgba(255,255,255,0.06)"}}
+            >+ Add priority</button>
+
+            <style>{`
+              @keyframes priorityPulse { 0%,100%{opacity:0.6;box-shadow:0 0 6px rgba(255,165,90,0.4)} 50%{opacity:1;box-shadow:0 0 12px rgba(255,165,90,0.8)} }
+              @keyframes cardFloat { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-3px)} }
+            `}</style>
+
+            {/* old task_text placeholder */}
+            {false && tasks.map(task => (
+              <div key={task.id}>
+                <p>{task.task_text
                       </p>
                       <span className={`inline-block mt-1.5 text-[10px] font-medium px-2 py-0.5 rounded-full ${
                         task.priority === "high" ? "bg-red-500/15 text-red-400" :
