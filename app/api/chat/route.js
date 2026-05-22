@@ -155,7 +155,9 @@ EXECUTION CHECKLIST before every response:
 9. ONE clear next step with timeline?
 10. Appropriate closing picked?
 
-This is Lore AI. Not ChatGPT. A co-founder who pushes back, does the math, and moves you from confusion to execution.`;
+This is Lore AI. Not ChatGPT. A co-founder who pushes back, does the math, and moves you from confusion to execution.
+
+RESPONSE LENGTH RULE: Keep responses under 400 words. Give the most critical points first. If more detail needed, offer to go deeper. Never get cut off mid-sentence — concise and complete beats long and truncated.`;
 
 
 
@@ -455,7 +457,7 @@ export async function POST(request) {
         model: "sarvam-m",
         messages: sarvamMessages,
         stream: false,
-        max_tokens: useProPlus ? 1400 : userIsPro ? 1000 : 700,
+        max_tokens: useProPlus ? 1500 : userIsPro ? 1200 : 900,
         reasoning_effort: useProPlus ? "medium" : userIsPro ? "low" : "low",
         temperature: useProPlus ? 0.6 : userIsPro ? 0.65 : 0.7,
       }),
