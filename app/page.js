@@ -584,7 +584,7 @@ export default function Home() {
 
       {/* Blocked overlay on input */}
       {isInputBlocked && (
-        <div style={{position:"absolute",inset:0,zIndex:10,borderRadius:16,cursor:"not-allowed"}} />
+        <div style={{position:"absolute",inset:0,zIndex:10,borderRadius:16,cursor:"not-allowed",background:"rgba(0,0,0,0.3)"}} />
       )}
 
       {/* Pro+ toggle button */}
