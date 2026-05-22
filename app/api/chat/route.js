@@ -510,14 +510,10 @@ export async function POST(request) {
       .replace(/<\/?\w*$/g, "") // dangling open tag at end (e.g. "</")
       .trim();
 
-    const words = assistantText.split(/(\s+)/);
     const encoder = new TextEncoder();
     const stream = new ReadableStream({
-      async start(controller) {
-        for (const word of words) {
-          controller.enqueue(encoder.encode(word));
-          await new Promise(r => setTimeout(r, 18));
-        }
+      start(controller) {
+        controller.enqueue(encoder.encode(assistantText));
         controller.close();
       },
     });
