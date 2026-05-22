@@ -479,7 +479,7 @@ export async function POST(request) {
         model: "sarvam-m",
         messages: sarvamMessages,
         stream: false,
-        max_tokens: useProPlus ? 1500 : userIsPro ? 1200 : 900,
+        max_tokens: useProPlus ? 1800 : userIsPro ? 1500 : 1000,
         reasoning_effort: useProPlus ? "medium" : userIsPro ? "low" : "low",
         temperature: useProPlus ? 0.6 : userIsPro ? 0.65 : 0.7,
       }),
