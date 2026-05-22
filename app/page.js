@@ -563,8 +563,6 @@ export default function Home() {
 
   const isInputBlocked = messagesLeft === 0 || cooldown > 0;
 
-  const isInputBlocked = messagesLeft === 0 || cooldown > 0;
-
   const chatInputBox = (
     <div className="relative w-full">
       <div className="absolute -inset-6 bg-gradient-to-r from-blue-400/10 via-purple-400/10 to-pink-300/10 blur-3xl opacity-50 rounded-full pointer-events-none"></div>
