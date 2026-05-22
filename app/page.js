@@ -58,6 +58,11 @@ export default function Home() {
   const [showTaskPanel, setShowTaskPanel] = useState(false);
   const TASKS_FEATURE_ENABLED = false; // TODO: re-enable when /api/tasks is stable
   const [priorities, setPriorities] = useState([]);
+  const [messagesLeft, setMessagesLeft] = useState(null);
+  const [dailyLimit, setDailyLimit] = useState(10);
+  const [burstWarning, setBurstWarning] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
+  const [cooldownInterval, setCooldownInterval] = useState(null);
   const [prioritiesLoading, setPrioritiesLoading] = useState(false);
 
   const loadPriorities = async () => {
@@ -427,6 +432,17 @@ export default function Home() {
         if (res.status === 429) {
           try {
             const data = await res.json();
+            if (data.error === "burst_limit" && data.cooldown) {
+              // Start cooldown timer
+              setCooldown(data.cooldown);
+              const interval = setInterval(() => {
+                setCooldown(prev => {
+                  if (prev <= 1) { clearInterval(interval); return 0; }
+                  return prev - 1;
+                });
+              }, 1000);
+              setCooldownInterval(interval);
+            }
             setMessages([...newMessagesForUI, { role: "assistant", content: data.message || "Rate limit reached. Try again later." }]);
           } catch {
             setMessages([...newMessagesForUI, { role: "assistant", content: "Rate limit reached. Try again later." }]);
@@ -442,6 +458,17 @@ export default function Home() {
         }
         setLoading(false);
         return;
+      }
+
+      // Read limit headers
+      const leftHeader = res.headers.get("X-Messages-Left");
+      const burstHeader = res.headers.get("X-Burst-Warning");
+      const limitHeader = res.headers.get("X-Daily-Limit");
+      if (leftHeader !== null) setMessagesLeft(parseInt(leftHeader));
+      if (limitHeader !== null) setDailyLimit(parseInt(limitHeader));
+      if (burstHeader === "true") {
+        setBurstWarning(true);
+        setTimeout(() => setBurstWarning(false), 8000);
       }
 
       setLoading(false);
@@ -533,6 +560,8 @@ export default function Home() {
   const userEmail = user?.email || "";
   const userAvatar = user?.user_metadata?.avatar_url || user?.user_metadata?.picture;
   const userInitial = userName.charAt(0).toUpperCase();
+
+  const isInputBlocked = messagesLeft === 0 || cooldown > 0;
 
   const chatInputBox = (
     <div className="relative w-full">
@@ -842,6 +871,20 @@ export default function Home() {
       )}
 
       <main className="flex-1 flex flex-col min-w-0 relative pb-16 md:pb-0">
+        {/* Burst warning */}
+        {burstWarning && (
+          <div style={{position:"fixed",top:16,left:"50%",transform:"translateX(-50%)",zIndex:100,background:"rgba(255,165,90,0.12)",border:"0.5px solid rgba(255,165,90,0.4)",borderRadius:100,padding:"8px 20px",fontSize:12,color:"rgba(255,165,90,0.95)",backdropFilter:"blur(12px)",animation:"fadeIn 0.3s ease"}}>
+            ⚡ Slow down — rapid questions get worse answers. Take a breath.
+          </div>
+        )}
+
+        {/* Daily limit warning */}
+        {messagesLeft !== null && messagesLeft <= 3 && messagesLeft > 0 && (
+          <div style={{position:"fixed",top:16,left:"50%",transform:"translateX(-50%)",zIndex:100,background:"rgba(255,100,100,0.1)",border:"0.5px solid rgba(255,100,100,0.3)",borderRadius:100,padding:"8px 20px",fontSize:12,color:"rgba(255,120,120,0.95)",backdropFilter:"blur(12px)",display:"flex",alignItems:"center",gap:8}}>
+            🔴 {messagesLeft} message{messagesLeft === 1 ? "" : "s"} left today —{" "}
+            <a href="/pricing" style={{color:"rgba(255,165,90,0.9)",textDecoration:"none",fontWeight:600}}>Go Pro for unlimited →</a>
+          </div>
+        )}
         {/* Hamburger toggle — always visible */}
         <button onClick={() => setSidebarOpen(!sidebarOpen)} className={`absolute top-4 left-4 z-20 p-2 rounded-lg transition-all hover:scale-110 ${isDark ? "text-neutral-400 hover:text-white hover:bg-white/5" : "text-neutral-500 hover:text-neutral-900 hover:bg-black/5"}`}>
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>

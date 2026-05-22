@@ -242,7 +242,16 @@ export async function POST(request) {
       const todayStart = new Date(now.getFullYear(), now.getMonth(), now.getDate()).toISOString();
       const oneMinuteAgo = new Date(now.getTime() - 60 * 1000).toISOString();
 
-      // Daily cap: 30 messages
+      // Fetch pro status for limit calculation
+      const { data: limitProfile } = await supabase
+        .from("profiles")
+        .select("is_pro")
+        .eq("id", user.id)
+        .single();
+      const isProForLimit = limitProfile?.is_pro || false;
+
+      // Daily cap: 10 free, 100 pro/pro+
+      const dailyLimit = isProForLimit ? 100 : 10;
       const { count: todayCount } = await supabase
         .from("usage_logs")
         .select("*", { count: "exact", head: true })
@@ -250,14 +259,21 @@ export async function POST(request) {
         .eq("action_type", "chat")
         .gte("created_at", todayStart);
 
-      if (todayCount !== null && todayCount >= 30) {
+      if (todayCount !== null && todayCount >= dailyLimit) {
         return NextResponse.json({
           error: "daily_limit",
-          message: "You have used Forge a lot today (30 messages). Your limit resets at midnight. Premium tier with unlimited messages is coming soon."
+          message: isProForLimit
+            ? "You have used 100 messages today. Your limit resets at midnight."
+            : "You have used all 10 free messages today. Upgrade to Pro for 100 messages/day.",
+          limit: dailyLimit,
+          used: todayCount,
         }, { status: 429 });
       }
 
-      // Per-minute burst cap: 10 messages
+      // Warning threshold — return count so frontend can show warning
+      const messagesLeft = dailyLimit - (todayCount || 0);
+
+      // Burst cap: 3/min warning, 5/min hard limit
       const { count: minuteCount } = await supabase
         .from("usage_logs")
         .select("*", { count: "exact", head: true })
@@ -265,12 +281,18 @@ export async function POST(request) {
         .eq("action_type", "chat")
         .gte("created_at", oneMinuteAgo);
 
-      if (minuteCount !== null && minuteCount >= 10) {
+      const burstLimit = isProForLimit ? 10 : 5;
+      const burstWarning = isProForLimit ? 7 : 3;
+
+      if (minuteCount !== null && minuteCount >= burstLimit) {
         return NextResponse.json({
           error: "burst_limit",
-          message: "Slow down a bit. You can send up to 10 messages per minute."
+          message: "Taking a breather — sending messages too fast hurts answer quality. Wait 60 seconds.",
+          cooldown: 60,
         }, { status: 429 });
       }
+
+      const isBurstWarning = minuteCount !== null && minuteCount >= burstWarning;
 
       // Log this usage (fire-and-forget so we don't slow the response)
       supabase
@@ -320,6 +342,8 @@ export async function POST(request) {
         .then(() => {});
     }
     // ===== END PRO+ TIER CHECK =====
+
+    const isProForLimit = userIsPro; // reuse for limit checks below
 
     // PROMPT TIER SYSTEM
     // Free: LITE for casual, FULL for startup queries (3020 tokens, safe)
@@ -542,10 +566,14 @@ export async function POST(request) {
       },
     });
 
+    const finalMessagesLeft = Math.max(0, (isProForLimit ? 100 : 10) - ((todayCount || 0) + 1));
     return new Response(stream, {
       headers: {
         "Content-Type": "text/plain; charset=utf-8",
         "Cache-Control": "no-cache",
+        "X-Messages-Left": String(finalMessagesLeft),
+        "X-Burst-Warning": isBurstWarning ? "true" : "false",
+        "X-Daily-Limit": String(isProForLimit ? 100 : 10),
       },
     });
   } catch (error) {
