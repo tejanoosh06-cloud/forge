@@ -432,8 +432,10 @@ export default function Home() {
         if (res.status === 429) {
           try {
             const data = await res.json();
-            if (data.error === "burst_limit" && data.cooldown) {
-              // Start cooldown timer
+            if (data.error === "daily_limit") {
+              setMessagesLeft(0);
+              if (data.limit) setDailyLimit(data.limit);
+            } else if (data.error === "burst_limit" && data.cooldown) {
               setCooldown(data.cooldown);
               const interval = setInterval(() => {
                 setCooldown(prev => {
@@ -443,7 +445,9 @@ export default function Home() {
               }, 1000);
               setCooldownInterval(interval);
             }
-            setMessages([...newMessagesForUI, { role: "assistant", content: data.message || "Rate limit reached. Try again later." }]);
+            if (data.error !== "daily_limit") {
+              setMessages([...newMessagesForUI, { role: "assistant", content: data.message || "Rate limit reached. Try again later." }]);
+            }
           } catch {
             setMessages([...newMessagesForUI, { role: "assistant", content: "Rate limit reached. Try again later." }]);
           }
