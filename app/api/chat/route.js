@@ -461,9 +461,31 @@ export async function POST(request) {
       }),
     });
 
+    console.log("[chat] Sarvam request | user:", user?.id?.slice(0,8) || "anon", "| status:", sarvamRes.status);
+
     if (!sarvamRes.ok) {
       const errText = await sarvamRes.text();
-      console.error("Sarvam error:", errText);
+      console.error("[chat] Sarvam error | user:", user?.id?.slice(0,8) || "anon", "| status:", sarvamRes.status, "| body:", errText);
+
+      if (sarvamRes.status === 429) {
+        console.log("[chat] Rate limited, retrying after 1s...");
+        await new Promise(r => setTimeout(r, 1000));
+        const retryRes = await fetch("https://api.sarvam.ai/v1/chat/completions", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", "api-subscription-key": process.env.SARVAM_API_KEY },
+          body: JSON.stringify({ model: "sarvam-m", messages: sarvamMessages, stream: false, max_tokens: useProPlus ? 1400 : userIsPro ? 1000 : 700, temperature: 0.7 }),
+        });
+        if (retryRes.ok) {
+          const retryData = await retryRes.json();
+          const retryText = retryData?.choices?.[0]?.message?.content || "";
+          if (retryText) {
+            const enc = new TextEncoder();
+            const st = new ReadableStream({ start(ctrl) { ctrl.enqueue(enc.encode(retryText)); ctrl.close(); } });
+            return new Response(st, { headers: { "Content-Type": "text/plain; charset=utf-8" } });
+          }
+        }
+        return Response.json({ error: "rate_limit", message: "Lore is handling many founders right now. Try again in a moment." }, { status: 429 });
+      }
 
       // Try to extract a useful error message from Sarvam's response
       let userMessage = "AI service had an issue. Please try again.";
