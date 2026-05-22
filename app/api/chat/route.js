@@ -343,8 +343,6 @@ export async function POST(request) {
     }
     // ===== END PRO+ TIER CHECK =====
 
-    const isProForLimit = userIsPro; // reuse for limit checks below
-
     // PROMPT TIER SYSTEM
     // Free: LITE for casual, FULL for startup queries (3020 tokens, safe)
     // Pro: FULL always (3020 tokens + more history)
@@ -566,14 +564,10 @@ export async function POST(request) {
       },
     });
 
-    const finalMessagesLeft = Math.max(0, (isProForLimit ? 100 : 10) - ((todayCount || 0) + 1));
     return new Response(stream, {
       headers: {
         "Content-Type": "text/plain; charset=utf-8",
         "Cache-Control": "no-cache",
-        "X-Messages-Left": String(finalMessagesLeft),
-        "X-Burst-Warning": isBurstWarning ? "true" : "false",
-        "X-Daily-Limit": String(isProForLimit ? 100 : 10),
       },
     });
   } catch (error) {
