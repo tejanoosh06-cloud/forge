@@ -563,9 +563,31 @@ export default function Home() {
 
   const isInputBlocked = messagesLeft === 0 || cooldown > 0;
 
+  const isInputBlocked = messagesLeft === 0 || cooldown > 0;
+
   const chatInputBox = (
     <div className="relative w-full">
       <div className="absolute -inset-6 bg-gradient-to-r from-blue-400/10 via-purple-400/10 to-pink-300/10 blur-3xl opacity-50 rounded-full pointer-events-none"></div>
+
+      {/* Cooldown timer */}
+      {cooldown > 0 && (
+        <div style={{textAlign:"center",padding:"10px",marginBottom:8,fontSize:12,color:"rgba(255,165,90,0.85)",background:"rgba(255,165,90,0.06)",border:"0.5px solid rgba(255,165,90,0.2)",borderRadius:12}}>
+          ⏱ Taking a breather... {cooldown}s — this helps Lore give better answers
+        </div>
+      )}
+
+      {/* Daily limit blocker */}
+      {messagesLeft === 0 && cooldown === 0 && (
+        <div style={{textAlign:"center",padding:"14px",marginBottom:8,background:"rgba(255,255,255,0.03)",border:"0.5px solid rgba(255,255,255,0.08)",borderRadius:14}}>
+          <div style={{fontSize:13,color:"rgba(255,255,255,0.55)",marginBottom:8}}>🔒 You have used all {dailyLimit} free messages today. Resets at midnight.</div>
+          <a href="/pricing" style={{color:"rgba(255,165,90,0.9)",fontWeight:600,fontSize:13,textDecoration:"none"}}>Upgrade to Pro for 100 messages/day →</a>
+        </div>
+      )}
+
+      {/* Blocked overlay on input */}
+      {isInputBlocked && (
+        <div style={{position:"absolute",inset:0,zIndex:10,borderRadius:16,cursor:"not-allowed"}} />
+      )}
 
       {/* Pro+ toggle button */}
       {user && (
